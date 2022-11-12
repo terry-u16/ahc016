@@ -1,0 +1,82 @@
+{
+    // IntelliSense を使用して利用可能な属性を学べます。
+    // 既存の属性の説明をホバーして表示します。
+    // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'ahc016-a'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=ahc016-a",
+                    "--package=ahc016"
+                ],
+                "filter": {
+                    "name": "ahc016-a",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'ahc016-a'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=ahc016-a",
+                    "--package=ahc016"
+                ],
+                "filter": {
+                    "name": "ahc016-a",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'tsp_test'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=tsp_test",
+                    "--package=ahc016"
+                ],
+                "filter": {
+                    "name": "tsp_test",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'tsp_test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=tsp_test",
+                    "--package=ahc016"
+                ],
+                "filter": {
+                    "name": "tsp_test",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
