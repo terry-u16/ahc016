@@ -2,9 +2,9 @@ use itertools::Itertools;
 use rand::{seq::SliceRandom, Rng};
 use rand_pcg::Pcg64Mcg;
 
-const N: usize = 20;
-const W: i32 = 5;
-const ERROR_RATE: f64 = 0.00;
+const N: usize = 8;
+const W: i32 = 2;
+const ERROR_RATE: f64 = 0.20;
 const SEED: u128 = 42;
 
 fn main() {
@@ -78,8 +78,26 @@ fn print(graph: &Vec<Vec<bool>>) {
 }
 
 fn tsp(graph: &Vec<Vec<bool>>) -> Vec<usize> {
-    let init_solution = (0..N).collect_vec();
-    annealing(graph, init_solution, 0.05)
+    //let init_solution = (0..N).collect_vec();
+    //annealing(graph, init_solution, 0.05)
+    brute_force(graph)
+}
+
+fn brute_force(graph: &Vec<Vec<bool>>) -> Vec<usize> {
+    let mut best_score = 0;
+    let mut best_perm = vec![];
+    let bits = gen_bits(graph);
+
+    for p in (0..N).permutations(N) {
+        let score = calc_score(&p, &bits);
+        if best_score.set_max(score) {
+            best_perm = p;
+        }
+    }
+
+    eprintln!("score: {}", best_score);
+
+    best_perm
 }
 
 fn annealing(graph: &Vec<Vec<bool>>, initial_solution: Vec<usize>, duration: f64) -> Vec<usize> {
