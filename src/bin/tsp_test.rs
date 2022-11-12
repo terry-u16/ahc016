@@ -83,6 +83,7 @@ fn tsp(graph: &Vec<Vec<bool>>) -> Vec<usize> {
     brute_force(graph)
 }
 
+#[allow(dead_code)]
 fn brute_force(graph: &Vec<Vec<bool>>) -> Vec<usize> {
     let mut best_score = 0;
     let mut best_perm = vec![];
@@ -100,6 +101,7 @@ fn brute_force(graph: &Vec<Vec<bool>>) -> Vec<usize> {
     best_perm
 }
 
+#[allow(dead_code)]
 fn annealing(graph: &Vec<Vec<bool>>, initial_solution: Vec<usize>, duration: f64) -> Vec<usize> {
     let bits = gen_bits(graph);
     let mut solution = initial_solution;
