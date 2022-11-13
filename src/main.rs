@@ -44,7 +44,7 @@ fn main() {
     let input = Input::read(&mut stdin);
 
     // グラフ生成
-    let encoder = CliqueEncoder::new(input.graph_count);
+    let encoder = CliqueEncoder::new(input.graph_count, input.error_ratio);
     writeln!(stdout, "{}", encoder.graph_size()).unwrap();
 
     for i in 0..input.graph_count {

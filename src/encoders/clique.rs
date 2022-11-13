@@ -15,16 +15,34 @@ pub struct CliqueEncoder {
 }
 
 impl CliqueEncoder {
-    pub fn new(graph_count: usize) -> Self {
+    pub fn new(graph_count: usize, error_ratio: f64) -> Self {
         // とりあえず暫定値
         // 全bitが1になることがなければ少しケチれる
-        let k_arries = vec![
-            KAry::new(7, 6, 5),
-            KAry::new(12, 10, 3),
-            KAry::new(17, 15, 2),
-            KAry::new(22, 20, 2),
-            KAry::new(27, 25, 2),
-        ];
+        let k_arries = if error_ratio < 0.15 {
+            vec![
+                KAry::new(7, 6, 4),
+                KAry::new(10, 9, 2),
+                KAry::new(13, 12, 2),
+                KAry::new(16, 15, 2),
+                KAry::new(19, 18, 2),
+                KAry::new(21, 20, 2),
+            ]
+        } else if error_ratio < 0.25 {
+            vec![
+                KAry::new(10, 8, 4),
+                KAry::new(13, 12, 2),
+                KAry::new(16, 15, 2),
+                KAry::new(19, 18, 2),
+                KAry::new(22, 21, 2),
+            ]
+        } else {
+            vec![
+                KAry::new(13, 11, 3),
+                KAry::new(18, 16, 2),
+                KAry::new(23, 21, 2),
+                KAry::new(28, 26, 2),
+            ]
+        };
 
         let mut encoder = Self {
             graph_count,
@@ -50,6 +68,9 @@ impl CliqueEncoder {
     fn to_base_k_num(&self, mut index: usize) -> Vec<usize> {
         let mut mul: usize = self.k_arries.iter().map(|a| a.count).product();
         let mut counts = vec![];
+
+        // mulを超えているものは諦める
+        index %= mul;
 
         for k_ary in self.k_arries.iter().rev() {
             mul /= k_ary.count;
@@ -86,7 +107,7 @@ impl CliqueEncoder {
     }
 
     fn expect(&self, graph: &Graph, duration: f64) -> usize {
-        const MIN_VIS: usize = 8;
+        const MIN_VIS: usize = 4;
         let annealer = Annealer::new(false);
         let groups = annealer.run(graph, duration);
         let groups = groups.into_iter().filter(|s| *s >= MIN_VIS).collect_vec();
