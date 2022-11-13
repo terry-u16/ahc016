@@ -4,7 +4,7 @@ use rand::Rng;
 use rand_pcg::Pcg64Mcg;
 
 #[derive(Debug, Clone, Copy)]
-struct SeparateNode {
+pub struct SeparateNode {
     node: usize,
     group: usize,
     prev_group: usize,

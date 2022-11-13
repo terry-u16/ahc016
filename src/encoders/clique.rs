@@ -1,11 +1,15 @@
 mod annealing;
 
+use self::annealing::annealer::Annealer;
+
 use super::Encoder;
 use crate::{graph::Graph, utils::ChangeMinMax};
 
 #[derive(Debug, Clone)]
 pub struct CliqueEncoder {
+    /// 送信するグラフの種類数
     graph_count: usize,
+    /// グラフの大きさ
     graph_size: usize,
     k_arries: Vec<KAry>,
 }
@@ -15,11 +19,11 @@ impl CliqueEncoder {
         // とりあえず暫定値
         // 全bitが1になることがなければ少しケチれる
         let k_arries = vec![
-            KAry::new(7, 5),
-            KAry::new(12, 3),
-            KAry::new(17, 2),
-            KAry::new(22, 2),
-            KAry::new(27, 2),
+            KAry::new(7, 5, 5),
+            KAry::new(12, 10, 3),
+            KAry::new(17, 15, 2),
+            KAry::new(22, 20, 2),
+            KAry::new(27, 25, 2),
         ];
 
         let mut encoder = Self {
@@ -81,8 +85,33 @@ impl CliqueEncoder {
         graph
     }
 
-    fn predict(&self, graph: &Graph) -> usize {
-        todo!()
+    fn expect(&self, graph: &Graph, duration: f64) -> usize {
+        let annealer = Annealer;
+        let groups = annealer.run(graph, duration);
+
+        // 復号する
+        let mut mul: usize = self.k_arries.iter().map(|a| a.count).product();
+        let mut result = 0;
+        let mut index = 0;
+
+        for k_ary in self.k_arries.iter().rev() {
+            mul /= k_ary.count;
+
+            // 許容下限以上ならk番目と判断
+            while index < groups.len() && groups[index] >= k_ary.lower_bound {
+                let next = result + mul;
+
+                // 整数Mを超える場合は無視
+                if next >= self.graph_count {
+                    break;
+                }
+
+                result = next;
+                index += 1;
+            }
+        }
+
+        result
     }
 }
 
@@ -96,20 +125,28 @@ impl Encoder for CliqueEncoder {
         self.create_graph(&counts)
     }
 
-    fn decode(&self, graph: &Graph) -> usize {
-        self.predict(graph)
+    fn decode(&self, graph: &Graph, duration: f64) -> usize {
+        self.expect(graph, duration)
     }
 }
 
 /// K進数（？）を表す構造体
 #[derive(Debug, Clone, Copy)]
 struct KAry {
+    /// 連結成分の大きさ
     size: usize,
+    /// 連結成分の大きさの許容下限
+    lower_bound: usize,
+    /// 最大の数
     count: usize,
 }
 
 impl KAry {
-    fn new(size: usize, count: usize) -> Self {
-        Self { size, count }
+    fn new(size: usize, lower_bound: usize, count: usize) -> Self {
+        Self {
+            size,
+            lower_bound,
+            count,
+        }
     }
 }

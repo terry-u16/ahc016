@@ -28,7 +28,7 @@ impl SplitGroup {
         }
 
         let group_id = *candidates.choose(rng).unwrap();
-        let nodes = state
+        let mut nodes = state
             .groups()
             .iter()
             .copied()
@@ -37,6 +37,8 @@ impl SplitGroup {
             .map(|(i, _)| i)
             .collect_vec();
 
+        // 同じ結果にならないようシャッフルする
+        nodes.shuffle(rng);
         let graph = construct_graph(graph, &nodes);
         let cut = max_cut(&graph);
 

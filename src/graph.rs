@@ -19,11 +19,6 @@ impl Graph {
         self.edges[v][u] = true;
     }
 
-    pub fn disconnect(&mut self, u: usize, v: usize) {
-        self.edges[u][v] = false;
-        self.edges[v][u] = false;
-    }
-
     pub fn deserialize(str: &str, n: usize) -> Self {
         let mut edges = vec![vec![false; n]; n];
         let mut chars = str.chars();
