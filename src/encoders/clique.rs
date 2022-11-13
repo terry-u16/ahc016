@@ -86,12 +86,10 @@ impl CliqueEncoder {
     }
 
     fn expect(&self, graph: &Graph, duration: f64) -> usize {
+        const MIN_VIS: usize = 8;
         let annealer = Annealer::new(false);
         let groups = annealer.run(graph, duration);
-        let groups = groups
-            .into_iter()
-            .filter(|s| *s >= self.k_arries[0].lower_bound)
-            .collect_vec();
+        let groups = groups.into_iter().filter(|s| *s >= MIN_VIS).collect_vec();
         eprintln!("{:?}", &groups);
 
         // 復号する
@@ -101,9 +99,14 @@ impl CliqueEncoder {
 
         for k_ary in self.k_arries.iter().rev() {
             mul /= k_ary.count;
+            let mut count = 0;
 
             // 許容下限以上ならk番目と判断
-            while index < groups.len() && groups[index] >= k_ary.lower_bound {
+            // TODO: DPをした方が良さそう
+            while index < groups.len()
+                && groups[index] >= k_ary.lower_bound
+                && count + 1 < k_ary.count
+            {
                 let next = result + mul;
 
                 // 整数Mを超える場合は無視
@@ -113,6 +116,7 @@ impl CliqueEncoder {
 
                 result = next;
                 index += 1;
+                count += 1;
             }
         }
 
