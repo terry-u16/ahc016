@@ -14,7 +14,7 @@ impl ChangeNode {
     pub fn gen(graph: &Graph, state: &State, rng: &mut Pcg64Mcg) -> Option<Self> {
         let groups = state.get_group_list();
 
-        if groups.len() == 0 {
+        if groups.len() <= 1 {
             return None;
         }
 
