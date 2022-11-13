@@ -1,15 +1,21 @@
-use std::cmp::Reverse;
-
 use super::state::State;
 use crate::{
     encoders::clique::annealing::neighbors::NeighborGenerator, graph::Graph, utils::ChangeMinMax,
 };
 use itertools::Itertools;
 use rand::prelude::*;
+use std::cmp::Reverse;
 
-pub struct Annealer;
+#[derive(Debug, Clone, Copy)]
+pub struct Annealer {
+    verbose: bool,
+}
 
 impl Annealer {
+    pub fn new(verbose: bool) -> Self {
+        Self { verbose }
+    }
+
     pub fn run(&self, graph: &Graph, duration: f64) -> Vec<usize> {
         // TODO: 初期解を貪欲で作る
         let state = State::init(graph);
@@ -24,8 +30,6 @@ impl Annealer {
             .collect_vec();
 
         sizes.sort_by_key(|s| Reverse(*s));
-        eprintln!("{:?}", &sizes);
-        
         sizes
     }
 
@@ -45,7 +49,7 @@ impl Annealer {
         let since = std::time::Instant::now();
 
         let temp0 = graph.n as f64;
-        let temp1 = 5e-1;
+        let temp1 = 1e-1;
         let mut inv_temp = 1.0 / temp0;
         let neighbor_generator = NeighborGenerator;
 
@@ -85,13 +89,15 @@ impl Annealer {
             valid_iter += 1;
         }
 
-        eprintln!("===== annealing =====");
-        eprintln!("score      : {}", best_score);
-        eprintln!("all iter   : {}", all_iter);
-        eprintln!("valid iter : {}", valid_iter);
-        eprintln!("accepted   : {}", accepted_count);
-        eprintln!("updated    : {}", update_count);
-        eprintln!("");
+        if self.verbose {
+            eprintln!("===== annealing =====");
+            eprintln!("score      : {}", best_score);
+            eprintln!("all iter   : {}", all_iter);
+            eprintln!("valid iter : {}", valid_iter);
+            eprintln!("accepted   : {}", accepted_count);
+            eprintln!("updated    : {}", update_count);
+            eprintln!("");
+        }
 
         best_solution
     }

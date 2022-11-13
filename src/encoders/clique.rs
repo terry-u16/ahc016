@@ -1,9 +1,9 @@
 mod annealing;
 
 use self::annealing::annealer::Annealer;
-
 use super::Encoder;
 use crate::{graph::Graph, utils::ChangeMinMax};
+use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 pub struct CliqueEncoder {
@@ -19,7 +19,7 @@ impl CliqueEncoder {
         // とりあえず暫定値
         // 全bitが1になることがなければ少しケチれる
         let k_arries = vec![
-            KAry::new(7, 5, 5),
+            KAry::new(7, 6, 5),
             KAry::new(12, 10, 3),
             KAry::new(17, 15, 2),
             KAry::new(22, 20, 2),
@@ -86,8 +86,13 @@ impl CliqueEncoder {
     }
 
     fn expect(&self, graph: &Graph, duration: f64) -> usize {
-        let annealer = Annealer;
+        let annealer = Annealer::new(false);
         let groups = annealer.run(graph, duration);
+        let groups = groups
+            .into_iter()
+            .filter(|s| *s >= self.k_arries[0].lower_bound)
+            .collect_vec();
+        eprintln!("{:?}", &groups);
 
         // 復号する
         let mut mul: usize = self.k_arries.iter().map(|a| a.count).product();

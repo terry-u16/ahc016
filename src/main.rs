@@ -1,16 +1,15 @@
+mod encoders;
+mod graph;
+mod utils;
+
+use crate::graph::Graph;
 use encoders::{clique::CliqueEncoder, Encoder};
 use proconio::source::line::LineSource;
-#[allow(unused_imports)]
 use proconio::*;
 use std::{
     io::{self, BufReader, BufWriter, Stdin, Write as _},
     time::Instant,
 };
-
-use crate::graph::Graph;
-mod encoders;
-mod graph;
-mod utils;
 
 #[derive(Debug, Clone)]
 struct Input {
@@ -59,12 +58,13 @@ fn main() {
     stdout.flush().unwrap();
 
     // クエリ回答
-    for _ in 0..QUERY_COUNT {
+    for q in 0..QUERY_COUNT {
         input! {
             from &mut stdin,
             graph: String
         }
 
+        eprintln!("query: {}", q);
         let graph = Graph::deserialize(&graph, encoder.graph_size());
         writeln!(stdout, "{}", encoder.decode(&graph, each_duration)).unwrap();
         stdout.flush().unwrap();
