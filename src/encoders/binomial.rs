@@ -9,7 +9,6 @@ pub struct BinomialEncoder {
     graph_count: usize,
     initial_values: Vec<f64>,
     expected_values: Vec<f64>,
-    standard_devs: Vec<f64>,
 }
 
 impl BinomialEncoder {
@@ -17,7 +16,6 @@ impl BinomialEncoder {
         let mut graph_size = !0;
         let mut initial_values = vec![];
         let mut expected_values = vec![];
-        let mut standard_devs = vec![];
 
         for size in (4..=100).rev() {
             let edge_count = size * (size - 1) / 2;
@@ -48,7 +46,6 @@ impl BinomialEncoder {
                 graph_size = size;
                 initial_values = inits;
                 expected_values = exps;
-                standard_devs = std_devs;
             }
         }
 
@@ -57,7 +54,6 @@ impl BinomialEncoder {
             graph_count,
             initial_values,
             expected_values,
-            standard_devs,
         }
     }
 
@@ -160,20 +156,13 @@ impl Encoder for BinomialEncoder {
         }
 
         // 一番近いやつを探す
-        // 何σ離れているかで考える
         let mut best_index = !0;
         let mut best_diff = std::f64::MAX;
 
         for i in 0..self.graph_count {
             let diff = (count as f64 - self.expected_values[i]).abs();
-            let mut std_dev = self.standard_devs[i];
-            if std_dev == 0.0 {
-                std_dev = 1.0;
-            }
 
-            let sigma = diff / std_dev;
-
-            if best_diff.change_min(sigma) {
+            if best_diff.change_min(diff) {
                 best_index = i;
             }
         }

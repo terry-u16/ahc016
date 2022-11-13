@@ -44,8 +44,20 @@ fn main() {
     let input = Input::read(&mut stdin);
 
     // グラフ生成
-    //let encoder = CliqueEncoder::new(input.graph_count, input.error_ratio);
-    let encoder = BinomialEncoder::new(input.graph_count, input.error_ratio);
+    let binomial: Box<dyn Encoder> =
+        Box::new(BinomialEncoder::new(input.graph_count, input.error_ratio));
+    let clique: Box<dyn Encoder> =
+        Box::new(CliqueEncoder::new(input.graph_count, input.error_ratio));
+
+    eprintln!("binomial: {}", binomial.graph_size());
+    eprintln!("clique  : {}", clique.graph_size());
+
+    let encoder = if binomial.graph_size() < clique.graph_size() {
+        binomial
+    } else {
+        clique
+    };
+
     writeln!(stdout, "{}", encoder.graph_size()).unwrap();
 
     for i in 0..input.graph_count {
