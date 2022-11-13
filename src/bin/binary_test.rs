@@ -93,7 +93,7 @@ fn main() {
 
     // 0/1に潰す
     for v in ensemble.iter_mut() {
-        *v /= 2;
+        *v /= (TRIAL_COUNT + 1) / 2;
     }
 
     println!("{:?}", ensemble);
