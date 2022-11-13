@@ -2,13 +2,10 @@
 name = "ahc016"
 version = "0.1.0"
 edition = "2018"
+default-run = "ahc016"
 
 [package.metadata.cargo-compete.bin]
 ahc016-a = { alias = "a", problem = "https://atcoder.jp/contests/ahc016/tasks/ahc016_a" }
-
-[[bin]]
-name = "ahc016-a"
-path = "src/bin/a.rs"
 
 [dependencies]
 num = "=0.2.1"
