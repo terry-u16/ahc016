@@ -1,4 +1,5 @@
 expanded.rs
 *.exe
+in.txt
 out.txt
 data/
