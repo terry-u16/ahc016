@@ -36,7 +36,6 @@ impl Input {
     }
 }
 
-#[proconio::fastout]
 fn main() {
     const QUERY_COUNT: usize = 100;
     let mut stdin = LineSource::new(BufReader::new(io::stdin()));

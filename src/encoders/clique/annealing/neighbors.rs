@@ -31,7 +31,7 @@ impl NeighborGenerator {
                 Self::into_box(ChangeNode::gen(graph, state, rng))
             } else if neigh_type < 80 {
                 Self::into_box(SeparateNode::gen(graph, state, rng))
-            } else if neigh_type < 95 {
+            } else if neigh_type < 90 {
                 Self::into_box(MergeGroups::gen(graph, state, rng))
             } else {
                 Self::into_box(SplitGroup::gen(graph, state, rng))

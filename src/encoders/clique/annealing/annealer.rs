@@ -37,6 +37,7 @@ impl Annealer {
         let mut solution = initial_solution;
         let mut best_solution = solution.clone();
         let mut current_score = solution.score();
+        let init_score = current_score;
         let mut best_score = current_score;
 
         let mut all_iter = 0;
@@ -91,6 +92,7 @@ impl Annealer {
 
         if self.verbose {
             eprintln!("===== annealing =====");
+            eprintln!("init score : {}", init_score);
             eprintln!("score      : {}", best_score);
             eprintln!("all iter   : {}", all_iter);
             eprintln!("valid iter : {}", valid_iter);
