@@ -1,3 +1,5 @@
+mod annealing;
+
 use super::Encoder;
 use crate::{graph::Graph, utils::ChangeMinMax};
 
