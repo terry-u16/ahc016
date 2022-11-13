@@ -1,7 +1,9 @@
 use rand::prelude::*;
 
 const M: usize = 14;
-const N: usize = M * 7;
+const BITS: usize = 7;
+const N: usize = M * BITS;
+const NOISE_PROB: f64 = 0.3;
 
 fn main() {
     let mut graph = Graph::new(N);
@@ -19,8 +21,7 @@ fn main() {
     println!("{}", &graph);
 
     // ノイズ付与
-    let mut rng = Pcg64Mcg::new(43);
-    const NOISE_PROB: f64 = 0.25;
+    let mut rng = Pcg64Mcg::new(42);
     for i in 0..N {
         for j in (i + 1)..N {
             if rng.gen_bool(NOISE_PROB) {
@@ -29,50 +30,73 @@ fn main() {
         }
     }
 
+    println!("--------------------------------------------");
+    println!("{}", &graph);
+
     // 焼きなまし
-    let mut state = (0..N).collect_vec();
-    state.shuffle(&mut rng);
-    println!("{:?}", &state);
+    // 3回やってアンサンブルする
+    const TRIAL_COUNT: usize = 3;
+    let mut ensemble = vec![0; BITS];
 
-    let state = annealing(&graph, state, 0.5);
+    for _ in 0..TRIAL_COUNT {
+        let mut state = (0..N).collect_vec();
+        state.shuffle(&mut rng);
+        println!("{:?}", &state);
 
-    println!("{:?}", &state);
+        let state = annealing(&graph, state, 1.0);
 
-    let mut new_graph = Graph::new(N);
+        println!("{:?}", &state);
 
-    for i in 0..N {
-        for j in (i + 1)..N {
-            if graph[state[i]][state[j]] {
-                new_graph.connect(i, j);
-            }
-        }
-    }
+        let mut new_graph = Graph::new(N);
 
-    println!("{}", &new_graph);
-    let mut bits = vec![];
-
-    for k in 0..(N / M) {
-        let mut s = 0;
-
-        for i in 0..M {
-            let i = k * M + i;
-
+        for i in 0..N {
             for j in (i + 1)..N {
                 if graph[state[i]][state[j]] {
-                    s += 1;
-                } else {
-                    s -= 1;
+                    new_graph.connect(i, j);
                 }
             }
         }
 
-        let bit = if s > 0 { 1 } else { 0 };
-        bits.push(bit);
-        print!("{} ", s);
+        //println!("{}", &new_graph);
+        let mut bits = vec![];
+
+        for k in 0..BITS {
+            let mut s = 0;
+
+            for i in 0..M {
+                let i = k * M + i;
+
+                for j in (i + 1)..N {
+                    if graph[state[i]][state[j]] {
+                        s += 1;
+                    } else {
+                        s -= 1;
+                    }
+                }
+            }
+
+            let bit = if s > 0 { 1 } else { 0 };
+            bits.push(bit);
+            print!("{} ", s);
+        }
+
+        println!();
+        println!("{:?}", bits);
+
+        for i in 0..bits.len() {
+            ensemble[i] += bits[i];
+        }
     }
 
-    println!();
-    println!("{:?}", bits);
+    println!("==============");
+    println!("{:?}", ensemble);
+
+    // 0/1に潰す
+    for v in ensemble.iter_mut() {
+        *v /= 2;
+    }
+
+    println!("{:?}", ensemble);
 }
 
 fn annealing(graph: &Graph, initial_solution: Vec<usize>, duration: f64) -> Vec<usize> {
