@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'ahc016-a'",
+            "name": "Debug executable 'ahc016'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=ahc016-a",
+                    "--bin=ahc016",
                     "--package=ahc016"
                 ],
                 "filter": {
-                    "name": "ahc016-a",
+                    "name": "ahc016",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'ahc016-a'",
+            "name": "Debug unit tests in executable 'ahc016'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=ahc016-a",
+                    "--bin=ahc016",
                     "--package=ahc016"
                 ],
                 "filter": {
-                    "name": "ahc016-a",
+                    "name": "ahc016",
                     "kind": "bin"
                 }
             },

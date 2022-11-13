@@ -2,7 +2,7 @@ mod encoders;
 mod graph;
 mod utils;
 
-use crate::graph::Graph;
+use crate::{encoders::binomial::BinomialEncoder, graph::Graph};
 use encoders::{clique::CliqueEncoder, Encoder};
 use proconio::source::line::LineSource;
 use proconio::*;
@@ -44,7 +44,8 @@ fn main() {
     let input = Input::read(&mut stdin);
 
     // グラフ生成
-    let encoder = CliqueEncoder::new(input.graph_count, input.error_ratio);
+    //let encoder = CliqueEncoder::new(input.graph_count, input.error_ratio);
+    let encoder = BinomialEncoder::new(input.graph_count, input.error_ratio);
     writeln!(stdout, "{}", encoder.graph_size()).unwrap();
 
     for i in 0..input.graph_count {

@@ -1,4 +1,5 @@
 pub mod clique;
+pub mod binomial;
 
 use crate::graph::Graph;
 
