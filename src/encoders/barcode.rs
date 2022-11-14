@@ -37,7 +37,7 @@ impl BarCodeEncoder {
 
         let max_index = (graph_count - 1) as u64;
         let digits = 64 - max_index.leading_zeros();
-        bar_widths.truncate(digits as usize);
+        bar_widths.truncate(digits as usize + 1);
         bar_widths.reverse();
 
         // 拡大可能なら拡大する
@@ -54,16 +54,14 @@ impl BarCodeEncoder {
     }
 
     fn restore_bits(&self, duration: f64, graph: &Graph) -> Vec<bool> {
-        // K回焼きなましを回して多数決を取る
-        const TRIAL_COUNT: usize = 3;
-        let mut votes = vec![0; self.bar_widths.len()];
-        let duration = duration / TRIAL_COUNT as f64;
         let restorer = Restorer;
+        let mut trial = 0;
 
-        for trial in 0..TRIAL_COUNT {
+        loop {
             let seed = trial as u128 + 42;
-            let graph = restorer.restore(graph, duration, seed);
+            let graph = restorer.restore(graph, duration * 0.5, seed);
             let mut row = 0;
+            let mut bits = vec![false; self.bar_widths.len()];
 
             for (d, &w) in self.bar_widths.iter().enumerate() {
                 let mut count = 0;
@@ -80,12 +78,15 @@ impl BarCodeEncoder {
                     row += 1;
                 }
 
-                votes[d] += if count > 0 { 1 } else { -1 };
+                bits[d] = if count > 0 { true } else { false };
             }
-        }
 
-        let bits = votes.iter().map(|c| *c > 0).collect_vec();
-        bits
+            if bits.iter().filter(|&&b| b).count() % 2 == 0 {
+                return bits;
+            }
+
+            trial += 1;
+        }
     }
 }
 
@@ -98,6 +99,8 @@ impl Encoder for BarCodeEncoder {
         let mut graph = Graph::new(self.graph_size);
 
         let mut row = 0;
+        let pairty = index.count_ones() as usize % 2;
+        let index = index | (pairty << (self.bar_widths.len() - 1));
 
         for (d, &w) in self.bar_widths.iter().enumerate() {
             let bit = ((index >> d) & 1) > 0;
@@ -116,7 +119,8 @@ impl Encoder for BarCodeEncoder {
     }
 
     fn decode(&self, graph: &Graph, duration: f64) -> usize {
-        let bits = self.restore_bits(duration, graph);
+        let mut bits = self.restore_bits(duration, graph);
+        bits[self.bar_widths.len() - 1] &= false;
 
         // ビット列をindexに復元
         let mut result = 0;
