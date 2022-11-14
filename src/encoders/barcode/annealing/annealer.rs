@@ -37,7 +37,7 @@ impl Annealer {
         let since = std::time::Instant::now();
 
         let graph_size = graph.n as f64;
-        let temp0 = graph_size * graph_size.sqrt();
+        let temp0 = graph_size * graph_size;
         let temp1 = 1e0;
         let mut inv_temp = 1.0 / temp0;
         let generator = NeighborGenerator;

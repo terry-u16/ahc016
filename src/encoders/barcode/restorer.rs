@@ -30,6 +30,8 @@ impl Restorer {
             }
         }
 
+        eprintln!("{}", &restored_graph);
+
         restored_graph
     }
 }

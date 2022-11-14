@@ -53,7 +53,7 @@ impl std::fmt::Display for Graph {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for row in 0..self.n {
             for col in 0..self.n {
-                let c = if self.edges[row][col] { '1' } else { '0' };
+                let c = if self.edges[row][col] { '#' } else { '.' };
                 write!(f, "{}", c)?;
             }
 

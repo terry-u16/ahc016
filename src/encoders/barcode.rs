@@ -24,12 +24,31 @@ impl BarCodeEncoder {
         }
     }
 
-    fn get_bar_widths(graph_count: usize, _error_ratio: f64) -> Vec<usize> {
-        let mut bar_widths = vec![14; 7];
+    fn get_bar_widths(graph_count: usize, error_ratio: f64) -> Vec<usize> {
+        let mut bar_widths = if error_ratio <= 0.05 {
+            vec![8, 7, 6, 6, 6, 5, 5]
+        } else if error_ratio <= 0.1 {
+            vec![11, 10, 9, 9, 8, 8, 7]
+        } else if error_ratio <= 0.15 {
+            vec![15, 13, 13, 13, 12, 10, 8]
+        } else {
+            vec![17, 16, 16, 15, 15, 13, 8]
+        };
+
         let max_index = (graph_count - 1) as u64;
         let digits = 64 - max_index.leading_zeros();
         bar_widths.truncate(digits as usize);
         bar_widths.reverse();
+
+        // 拡大可能なら拡大する
+        if error_ratio > 0.2 {
+            let size: usize = bar_widths.iter().sum();
+            let zoom_ratio = 100.0 / size as f64;
+            bar_widths = bar_widths
+                .iter()
+                .map(|&w| (w as f64 * zoom_ratio) as usize)
+                .collect_vec();
+        }
 
         bar_widths
     }
