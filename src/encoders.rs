@@ -1,5 +1,7 @@
-pub mod clique;
+pub mod barcode;
 pub mod binomial;
+#[allow(dead_code)]
+pub mod clique;
 
 use crate::graph::Graph;
 

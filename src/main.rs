@@ -2,8 +2,11 @@ mod encoders;
 mod graph;
 mod utils;
 
-use crate::{encoders::binomial::BinomialEncoder, graph::Graph};
-use encoders::{clique::CliqueEncoder, Encoder};
+use crate::{
+    encoders::{barcode::BarCodeEncoder, binomial::BinomialEncoder},
+    graph::Graph,
+};
+use encoders::Encoder;
 use proconio::source::line::LineSource;
 use proconio::*;
 use std::{
@@ -46,16 +49,16 @@ fn main() {
     // グラフ生成
     let binomial: Box<dyn Encoder> =
         Box::new(BinomialEncoder::new(input.graph_count, input.error_ratio));
-    let clique: Box<dyn Encoder> =
-        Box::new(CliqueEncoder::new(input.graph_count, input.error_ratio));
+    let barcode: Box<dyn Encoder> =
+        Box::new(BarCodeEncoder::new(input.graph_count, input.error_ratio));
 
     eprintln!("binomial: {}", binomial.graph_size());
-    eprintln!("clique  : {}", clique.graph_size());
+    eprintln!("barcode : {}", barcode.graph_size());
 
-    let encoder = if binomial.graph_size() < clique.graph_size() {
+    let encoder = if binomial.graph_size() < barcode.graph_size() {
         binomial
     } else {
-        clique
+        barcode
     };
 
     writeln!(stdout, "{}", encoder.graph_size()).unwrap();

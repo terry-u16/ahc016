@@ -1,9 +1,9 @@
 use rand::prelude::*;
 
-const M: usize = 14;
+const M: usize = 4;
 const BITS: usize = 7;
 const N: usize = M * BITS;
-const NOISE_PROB: f64 = 0.3;
+const NOISE_PROB: f64 = 0.05;
 
 fn main() {
     let mut graph = Graph::new(N);
