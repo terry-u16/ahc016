@@ -3,13 +3,17 @@ use rand::prelude::*;
 const M: usize = 12;
 const BITS: usize = 8;
 const N: usize = M * BITS;
-const NOISE_PROB: f64 = 0.2;
+const NOISE_PROB: f64 = 0.0;
 
 fn main() {
     let mut graph = Graph::new(N);
 
     for i in 0..N {
         for j in (i + 1)..N {
+            if i / M == 0 {
+                continue;
+            }
+
             if i / M == j / M {
                 graph.connect(i, j);
             }
@@ -22,7 +26,11 @@ fn main() {
                 graph.connect(i, j);
             }
 
-            if (i / M + j / M) % 2 == 1 {
+            if j / M - i / M >= 3
+                && (i / M + j / M) % 2 == 1
+                && (i / M + j / M) % 3 == 1
+                && (i + j) % 2 == 0
+            {
                 graph.connect(i, j);
             }
         }
@@ -44,9 +52,9 @@ fn main() {
     println!("{}", &graph);
 
     // 焼きなまし
-    // 3回やってアンサンブルする
-    const TRIAL_COUNT: usize = 3;
-    let mut ensemble = vec![0; BITS];
+    // 何度もやって平均する
+    const TRIAL_COUNT: usize = 10;
+    let mut summary = vec![vec![0; N]; N];
 
     for _ in 0..TRIAL_COUNT {
         let mut state = (0..N).collect_vec();
@@ -69,83 +77,48 @@ fn main() {
 
         println!("{}", &new_graph);
 
-        // フィルタ処理
-        let mut g = Graph::new(new_graph.n);
-
         for i in 0..N {
             new_graph.connect(i, i);
         }
 
-        for row in 0..g.n {
-            for col in 0..g.n {
-                let mut cnt = 0;
-
-                const FILTER_SIZE: i32 = 3;
-                for dr in -FILTER_SIZE..=FILTER_SIZE {
-                    for dc in -FILTER_SIZE..=FILTER_SIZE {
-                        let r = row.wrapping_add(dr as usize);
-                        let c = col.wrapping_add(dc as usize);
-
-                        if r >= g.n || c >= g.n {
-                            continue;
-                        }
-
-                        if new_graph[r][c] {
-                            cnt += 1;
-                        } else {
-                            cnt -= 1;
-                        }
-                    }
-                }
-
-                if cnt > 0 {
-                    g.connect(row, col);
+        for row in 0..N {
+            for col in 0..N {
+                if new_graph[row][col] {
+                    summary[row][col] += 12;
+                } else {
+                    summary[row][col] -= 10;
                 }
             }
         }
+    }
 
-        println!();
-        println!("{}", &g);
+    let mut new_graph = Graph::new(N);
 
-        let mut bits = vec![];
+    for row in 0..N {
+        for col in 0..N {
+            let mut cnt = 0;
 
-        for k in 0..BITS {
-            let mut s = 0;
+            const FILTER_SIZE: i32 = 2;
+            for dr in -FILTER_SIZE..=FILTER_SIZE {
+                for dc in -FILTER_SIZE..=FILTER_SIZE {
+                    let r = row.wrapping_add(dr as usize);
+                    let c = col.wrapping_add(dc as usize);
 
-            for i in 0..M {
-                let i = k * M + i;
-
-                for j in (i + 1)..N {
-                    if graph[state[i]][state[j]] {
-                        s += BITS as i32;
-                    } else {
-                        s -= 1;
+                    if r >= N || c >= N {
+                        continue;
                     }
+
+                    cnt += summary[r][c];
                 }
             }
 
-            let bit = if s > 0 { 1 } else { 0 };
-            bits.push(bit);
-            print!("{} ", s);
-        }
-
-        println!();
-        println!("{:?}", bits);
-
-        for i in 0..bits.len() {
-            ensemble[i] += bits[i];
+            if cnt > 0 {
+                new_graph.connect(row, col);
+            }
         }
     }
 
-    println!("==============");
-    println!("{:?}", ensemble);
-
-    // 0/1に潰す
-    for v in ensemble.iter_mut() {
-        *v /= (TRIAL_COUNT + 1) / 2;
-    }
-
-    println!("{:?}", ensemble);
+    println!("{}", new_graph);
 }
 
 fn annealing(graph: &Graph, initial_solution: Vec<usize>, duration: f64) -> Vec<usize> {
@@ -225,12 +198,14 @@ fn calc_score(graph: &Graph, state: &[usize]) -> i64 {
         for col in (row + 1)..N {
             let j = state[col];
 
-            if !graph[i][j] ^ (row / M == col / M) {
-                s += 2;
-            } else if !graph[i][j] ^ (row / M + 1 == col / M) {
-                s += 2;
-            } else if !graph[i][j] ^ ((i / M + j / M) % 2 == 1) {
-                s -= 1;
+            if graph[i][j] && row / M == col / M {
+                if row / M == 0 {
+                    s -= 1;
+                } else {
+                    s += 1;
+                }
+            } else if graph[i][j] && (row / M + 1 == col / M) {
+                s += 1;
             }
         }
 
