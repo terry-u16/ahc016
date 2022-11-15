@@ -1,16 +1,15 @@
 use rand::prelude::*;
 
-const M: usize = 14;
-const BITS: usize = 14;
-const HALF_BITS: usize = BITS / 2;
+const M: usize = 4;
+const BITS: usize = 7;
 const N: usize = M * BITS;
-const NOISE_PROB: f64 = 0.25;
+const NOISE_PROB: f64 = 0.05;
 
 fn main() {
     let mut graph = Graph::new(N);
 
     for i in 0..N {
-        if ((i / M) % HALF_BITS) % 2 != 0 {
+        if (i / M) % 2 != 0 {
             continue;
         }
 
@@ -34,16 +33,19 @@ fn main() {
     println!("--------------------------------------------");
     println!("{}", &graph);
 
-    // 前7bitと後ろ7bitが一致したらokと見なす
-    for trial in 0.. {
-        println!("TRIAL {}", trial);
+    // 焼きなまし
+    // 3回やってアンサンブルする
+    const TRIAL_COUNT: usize = 3;
+    let mut ensemble = vec![0; BITS];
+
+    for _ in 0..TRIAL_COUNT {
         let mut state = (0..N).collect_vec();
         state.shuffle(&mut rng);
-        //println!("{:?}", &state);
+        println!("{:?}", &state);
 
-        let state = annealing(&graph, state, 0.1);
+        let state = annealing(&graph, state, 1.0);
 
-        //println!("{:?}", &state);
+        println!("{:?}", &state);
 
         let mut new_graph = Graph::new(N);
 
@@ -81,16 +83,20 @@ fn main() {
         println!();
         println!("{:?}", bits);
 
-        let mut ok = true;
-
-        for i in 0..HALF_BITS {
-            ok &= bits[i] == bits[i + HALF_BITS];
-        }
-
-        if ok {
-            break;
+        for i in 0..bits.len() {
+            ensemble[i] += bits[i];
         }
     }
+
+    println!("==============");
+    println!("{:?}", ensemble);
+
+    // 0/1に潰す
+    for v in ensemble.iter_mut() {
+        *v /= (TRIAL_COUNT + 1) / 2;
+    }
+
+    println!("{:?}", ensemble);
 }
 
 fn annealing(graph: &Graph, initial_solution: Vec<usize>, duration: f64) -> Vec<usize> {
