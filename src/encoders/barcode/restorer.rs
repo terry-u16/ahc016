@@ -30,6 +30,42 @@ impl Restorer {
             }
         }
 
+        restored_graph = Self::filter(&restored_graph);
+
         restored_graph
+    }
+
+    fn filter(graph: &Graph) -> Graph {
+        let mut new_graph = Graph::new(graph.n);
+        const WIDTH: i32 = 2;
+
+        for row in 0..graph.n {
+            for col in 0..graph.n {
+                let mut count = 0;
+
+                for dr in -WIDTH..=WIDTH {
+                    for dc in -WIDTH..=WIDTH {
+                        let r = row.wrapping_add(dr as usize);
+                        let c = col.wrapping_add(dc as usize);
+
+                        if !(r < graph.n && c < graph.n) {
+                            continue;
+                        }
+
+                        if graph[r][c] {
+                            count += 1;
+                        } else {
+                            count -= 1;
+                        }
+                    }
+                }
+
+                if count > 0 {
+                    new_graph.connect(row, col);
+                }
+            }
+        }
+
+        new_graph
     }
 }
