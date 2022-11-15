@@ -1,9 +1,9 @@
 use rand::prelude::*;
 
-const M: usize = 14;
+const M: usize = 4;
 const BITS: usize = 7;
 const N: usize = M * BITS;
-const NOISE_PROB: f64 = 0.3;
+const NOISE_PROB: f64 = 0.05;
 
 fn main() {
     let mut graph = Graph::new(N);
@@ -34,84 +34,69 @@ fn main() {
     println!("{}", &graph);
 
     // 焼きなまし
-    // 複数回やってアンサンブルする
-    const TRIAL_COUNT: usize = 100;
-    let mut summary = vec![vec![0; N]; N];
+    // 3回やってアンサンブルする
+    const TRIAL_COUNT: usize = 3;
+    let mut ensemble = vec![0; BITS];
 
     for _ in 0..TRIAL_COUNT {
         let mut state = (0..N).collect_vec();
         state.shuffle(&mut rng);
         println!("{:?}", &state);
 
-        let state = annealing(&graph, state, 0.1);
+        let state = annealing(&graph, state, 1.0);
 
         println!("{:?}", &state);
+
+        let mut new_graph = Graph::new(N);
 
         for i in 0..N {
             for j in (i + 1)..N {
                 if graph[state[i]][state[j]] {
-                    summary[i][j] += 1;
-                } else {
-                    summary[i][j] -= 1;
+                    new_graph.connect(i, j);
                 }
             }
         }
-    }
 
-    // 集計 + フィルタ処理
-    let mut new_graph = Graph::new(N);
+        //println!("{}", &new_graph);
+        let mut bits = vec![];
 
-    for row in 0..N {
-        for col in 0..N {
-            let mut cnt = 0;
+        for k in 0..BITS {
+            let mut s = 0;
 
-            const FILTER_SIZE: i32 = 1;
-            for dr in -FILTER_SIZE..=FILTER_SIZE {
-                for dc in -FILTER_SIZE..=FILTER_SIZE {
-                    let r = row.wrapping_add(dr as usize);
-                    let c = col.wrapping_add(dc as usize);
+            for i in 0..M {
+                let i = k * M + i;
 
-                    if r >= N || c >= N {
-                        continue;
+                for j in (i + 1)..N {
+                    if graph[state[i]][state[j]] {
+                        s += 1;
+                    } else {
+                        s -= 1;
                     }
-
-                    cnt += summary[r][c];
                 }
             }
 
-            if cnt > 0 {
-                new_graph.connect(row, col);
-            }
+            let bit = if s > 0 { 1 } else { 0 };
+            bits.push(bit);
+            print!("{} ", s);
+        }
+
+        println!();
+        println!("{:?}", bits);
+
+        for i in 0..bits.len() {
+            ensemble[i] += bits[i];
         }
     }
 
-    println!("{}", &new_graph);
+    println!("==============");
+    println!("{:?}", ensemble);
 
-    // bitに変換
-    let mut bits = vec![];
-
-    for k in 0..BITS {
-        let mut s = 0;
-
-        for i in 0..M {
-            let i = k * M + i;
-
-            for j in (i + 1)..N {
-                if new_graph[i][j] {
-                    s += 1;
-                } else {
-                    s -= 1;
-                }
-            }
-        }
-
-        let bit = if s > 0 { 1 } else { 0 };
-        bits.push(bit);
-        print!("{} ", s);
+    // 0/1に潰す
+    for v in ensemble.iter_mut() {
+        *v /= (TRIAL_COUNT + 1) / 2;
     }
 
-    println!();
-    println!("{:?}", bits);
+    println!("{:?}", ensemble);
 }
 
 fn annealing(graph: &Graph, initial_solution: Vec<usize>, duration: f64) -> Vec<usize> {
