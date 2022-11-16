@@ -4,8 +4,8 @@ use rand::seq::SliceRandom;
 use rand_pcg::Pcg64Mcg;
 use std::ops::Index;
 
-const WIDTH: usize = 20;
-const BITS: usize = 5;
+const WIDTH: usize = 16;
+const BITS: usize = 6;
 const N: usize = WIDTH * BITS;
 const ERROR_RATIO: f64 = 0.35;
 
@@ -16,6 +16,20 @@ fn main() {
     let mut state = grouping(&graph);
 
     state.sort_by_key(|g| g.iter().sum::<usize>());
+
+    let mut new_graph = Graph::new(N);
+
+    for i in 0..N {
+        for j in (i + 1)..N {
+            let u = state[i / WIDTH][i % WIDTH];
+            let v = state[j / WIDTH][j % WIDTH];
+
+            if graph[u][v] {
+                new_graph.connect(i, j);
+            }
+        }
+    }
+    eprintln!("{}", new_graph);
 
     for group in state.iter_mut() {
         group.sort_unstable();
@@ -29,6 +43,15 @@ fn gen_graph() -> Graph {
     for i in 0..N {
         for j in (i + 1)..N {
             if i / WIDTH == j / WIDTH {
+                graph.connect(i, j);
+            }
+        }
+    }
+
+    // 1と2の間をつなぐ
+    for i in 0..N {
+        for j in (i + 1)..N {
+            if i / WIDTH == 0 && j / WIDTH == 1 {
                 graph.connect(i, j);
             }
         }
@@ -76,6 +99,8 @@ fn calc_score(graph: &Graph, state: &State) -> i32 {
     let mut score = 0;
 
     for group in state.iter() {
+        let mut sum = 0;
+
         for i in 0..group.len() {
             let u = group[i];
 
@@ -83,9 +108,31 @@ fn calc_score(graph: &Graph, state: &State) -> i32 {
                 let v = group[j];
 
                 if graph[u][v] {
-                    score += 1;
+                    sum += 1;
                 }
             }
+        }
+
+        // そのままだと↓の半分未満になってしまうので2倍する
+        sum *= 2;
+        score += sum;
+    }
+
+    for g1 in 0..state.len() {
+        for g2 in (g1 + 1)..state.len() {
+            let mut sum: i32 = 0;
+
+            for &u in state[g1].iter() {
+                for &v in state[g2].iter() {
+                    if graph[u][v] {
+                        sum += 1;
+                    } else {
+                        sum -= 1;
+                    }
+                }
+            }
+
+            score += sum.abs();
         }
     }
 
@@ -110,7 +157,7 @@ fn annealing(graph: &Graph, initial_solution: State, duration: f64) -> State {
     let mut time = 0.0;
 
     let temp0 = 5e1;
-    let temp1 = 1e-1;
+    let temp1 = 5e-1;
     let mut inv_temp = 1.0 / temp0;
 
     while time < 1.0 {
