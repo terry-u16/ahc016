@@ -77,7 +77,7 @@ fn gen_graph() -> Graph {
 
 fn grouping(graph: &Graph) -> State {
     let state = get_init_state();
-    let state = annealing(graph, state, 1.0);
+    let state = annealing(graph, state, 1.00);
     state
 }
 

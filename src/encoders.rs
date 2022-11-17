@@ -2,6 +2,7 @@ pub mod barcode;
 pub mod binomial;
 #[allow(dead_code)]
 pub mod clique;
+mod isomophism;
 
 use crate::graph::Graph;
 
