@@ -1,4 +1,4 @@
-pub mod state;
-mod binarygraph;
+pub mod annealer;
+pub mod binarygraph;
 mod neighbors;
-mod annealer;
+pub mod state;

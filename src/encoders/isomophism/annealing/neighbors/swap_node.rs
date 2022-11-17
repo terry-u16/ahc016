@@ -12,7 +12,7 @@ pub struct SwapNode {
 }
 
 impl SwapNode {
-    pub fn gen(graph: &BinaryGraph, state: &State, rng: &mut Pcg64Mcg) -> Self {
+    pub fn gen(_graph: &BinaryGraph, state: &State, rng: &mut Pcg64Mcg) -> Self {
         let group_count = state.group_count();
         let group_size = state.group_size();
 

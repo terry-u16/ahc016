@@ -1,12 +1,12 @@
 use crate::graph::Graph;
 
 /// グラフの同型性を判定するトレイト
-trait IsomophicChecker {
+pub trait IsomophicChecker {
     /// 2つのグラフが同型かどうか判定する
     fn are_isomorphic(&self, graph1: &Graph, graph2: &Graph) -> bool;
 
     /// 互いに同型でないグラフをn個以上生成する
-    fn generate_isompic_graphs(&self, n: usize) -> Vec<Graph> {
+    fn generate_isompic_graphs(&self, n: usize) -> (Vec<Graph>, usize) {
         let mut size = 2;
 
         loop {
@@ -23,7 +23,7 @@ trait IsomophicChecker {
             }
 
             if graphs.len() >= n {
-                return graphs;
+                return (graphs, size);
             }
 
             size += 1;
@@ -51,12 +51,12 @@ fn gen_graph(bits: usize, n: usize) -> Graph {
 /// グラフの次数集合で同型性を判定（大嘘）する構造体
 /// 実際は同型性判定はできないのだが、計算量が軽く十分な数のグラフを識別できる
 #[derive(Debug, Clone, Copy)]
-struct DegreeChecker;
+pub struct DegreeChecker;
 
 impl DegreeChecker {
     fn get_degs(graph: &Graph) -> Vec<u32> {
         let n = graph.n;
-        let mut degs = vec![0; n * (n - 1) / 2];
+        let mut degs = vec![0; n];
 
         for i in 0..n {
             for j in (i + 1)..n {

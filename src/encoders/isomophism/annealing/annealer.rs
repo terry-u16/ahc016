@@ -12,7 +12,7 @@ impl Annealer {
         Self { verbose }
     }
 
-    fn annealing(&self, graph: &BinaryGraph, initial_solution: State, duration: f64) -> State {
+    pub fn annealing(&self, graph: &BinaryGraph, initial_solution: State, duration: f64) -> State {
         let mut solution = initial_solution;
         let mut best_solution = solution.clone();
         let mut current_score = solution.score();
@@ -28,8 +28,8 @@ impl Annealer {
         let duration_inv = 1.0 / duration;
         let since = std::time::Instant::now();
 
-        let temp0 = 5e1;
-        let temp1 = 5e-1;
+        let temp0 = 1e2;
+        let temp1 = 1e-1;
         let mut inv_temp = 1.0 / temp0;
         let generator = NeighborGenerator;
 

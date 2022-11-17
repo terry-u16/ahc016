@@ -1,3 +1,5 @@
+use crate::graph::Graph;
+
 use super::binarygraph::BinaryGraph;
 use itertools::Itertools;
 use rand::prelude::*;
@@ -55,10 +57,6 @@ impl State {
 
     pub fn score(&self) -> i32 {
         self.score
-    }
-
-    pub fn get_groups(&self) -> Vec<Vec<usize>> {
-        self.groups.clone()
     }
 
     pub fn swap_nodes(
@@ -228,6 +226,20 @@ impl State {
                 self.score += counts[c1].abs();
             }
         }
+    }
+
+    pub fn restore_graph(&self) -> Graph {
+        let mut restored_graph = Graph::new(self.group_count);
+
+        for i in 0..self.group_count {
+            for j in (i + 1)..self.group_count {
+                if self.cross_counts[i][j] > 0 {
+                    restored_graph.connect(i, j);
+                }
+            }
+        }
+
+        restored_graph
     }
 }
 

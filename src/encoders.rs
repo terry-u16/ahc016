@@ -1,8 +1,10 @@
+#[allow(dead_code)]
 pub mod barcode;
+#[allow(dead_code)]
 pub mod binomial;
 #[allow(dead_code)]
 pub mod clique;
-mod isomophism;
+pub mod isomophism;
 
 use crate::graph::Graph;
 

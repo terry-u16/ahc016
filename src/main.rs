@@ -2,10 +2,7 @@ mod encoders;
 mod graph;
 mod utils;
 
-use crate::{
-    encoders::{barcode::BarCodeEncoder, binomial::BinomialEncoder},
-    graph::Graph,
-};
+use crate::{encoders::isomophism::IsomophismEncoder, graph::Graph};
 use encoders::Encoder;
 use proconio::source::line::LineSource;
 use proconio::*;
@@ -47,19 +44,7 @@ fn main() {
     let input = Input::read(&mut stdin);
 
     // グラフ生成
-    let binomial: Box<dyn Encoder> =
-        Box::new(BinomialEncoder::new(input.graph_count, input.error_ratio));
-    let barcode: Box<dyn Encoder> =
-        Box::new(BarCodeEncoder::new(input.graph_count, input.error_ratio));
-
-    eprintln!("binomial: {}", binomial.graph_size());
-    eprintln!("barcode : {}", barcode.graph_size());
-
-    let encoder = if binomial.graph_size() < barcode.graph_size() {
-        binomial
-    } else {
-        barcode
-    };
+    let encoder = IsomophismEncoder::new(input.graph_count, input.error_ratio);
 
     writeln!(stdout, "{}", encoder.graph_size()).unwrap();
 
