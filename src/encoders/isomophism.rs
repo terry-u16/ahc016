@@ -49,18 +49,20 @@ impl IsomophismEncoder {
             3
         } else if error_ratio <= 0.05 {
             4
-        } else if error_ratio <= 0.1 {
-            6
+        } else if error_ratio <= 0.13 {
+            5
         } else if error_ratio <= 0.15 {
+            6
+        } else if error_ratio <= 0.19 {
             7
-        } else if error_ratio <= 0.2 {
-            9
+        } else if error_ratio <= 0.22 {
+            8
         } else if error_ratio <= 0.25 {
-            11
-        } else if error_ratio <= 0.3 {
+            10
+        } else if error_ratio <= 0.28 {
             12
-        } else if error_ratio <= 0.35 {
-            (100 / original_graph_size).min(20)
+        } else if error_ratio <= 0.32 {
+            14
         } else {
             100 / original_graph_size
         }
