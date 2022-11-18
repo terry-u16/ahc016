@@ -59,6 +59,8 @@ impl IsomophicChecker for DegreeChecker {
 }
 
 /// VF2アルゴリズムによりグラフの同型性判定を行う構造体
+/// テストを行った結果順列全探索だと時間がかかりすぎると思い込んでしまったために実装されたが、
+/// そのテスト自体が間違っていたため本来不要だったという悲しい経歴を持つ
 /// 参考: http://satemochi.blog.fc2.com/blog-entry-224.html
 #[derive(Debug, Clone)]
 pub struct Vf2Checker {

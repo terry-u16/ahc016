@@ -11,6 +11,25 @@ use std::{
     time::Instant,
 };
 
+const DEFAULT_QUERY_COUNT: usize = 100;
+
+#[derive(Debug, Clone, Copy)]
+struct AppArgs {
+    query_count: usize,
+}
+
+impl AppArgs {
+    fn read() -> Self {
+        let query_count = if std::env::args().len() < 2 {
+            DEFAULT_QUERY_COUNT
+        } else {
+            std::env::args().nth(1).unwrap().parse().unwrap()
+        };
+
+        Self { query_count }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct Input {
     graph_count: usize,
@@ -37,7 +56,7 @@ impl Input {
 }
 
 fn main() {
-    const QUERY_COUNT: usize = 100;
+    let app_args = AppArgs::read();
     let mut stdin = LineSource::new(BufReader::new(io::stdin()));
     let stdout = io::stdout();
     let stdout = &mut BufWriter::new(stdout.lock());
@@ -54,11 +73,11 @@ fn main() {
     }
 
     let elapsed = Instant::now() - input.since;
-    let each_duration = (5.0 - (elapsed.as_secs_f64() + 0.5)) / QUERY_COUNT as f64;
+    let each_duration = (5.0 - (elapsed.as_secs_f64() + 0.5)) / DEFAULT_QUERY_COUNT as f64;
     stdout.flush().unwrap();
 
     // クエリ回答
-    for q in 0..QUERY_COUNT {
+    for q in 0..app_args.query_count {
         input! {
             from &mut stdin,
             graph: String
