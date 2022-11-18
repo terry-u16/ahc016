@@ -114,7 +114,7 @@ fn main() {
         .arg(query_count.to_string())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        //.stderr(Stdio::null())
+        .stderr(Stdio::null())
         .spawn()
         .unwrap_or_else(|e| {
             eprintln!("failed to execute the command");

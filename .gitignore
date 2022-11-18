@@ -4,3 +4,6 @@ in.txt
 out.txt
 err.txt
 data/
+.vs
+/AtCoderHeuristicContest016.Sampler/bin
+/AtCoderHeuristicContest016.Sampler/obj
