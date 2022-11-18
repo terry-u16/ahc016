@@ -1,6 +1,6 @@
 use self::{
     annealing::{binarygraph::BinaryGraph, state::State},
-    checker::{DegreeChecker, IsomophicChecker},
+    checker::{generate_isompic_graphs, IsomophicChecker, Vf2Checker},
 };
 use super::Encoder;
 use crate::{
@@ -22,13 +22,12 @@ pub struct IsomophismEncoder {
     original_graph_size: usize,
     /// 冗長性
     redundancy: usize,
-    checker: DegreeChecker,
 }
 
 impl IsomophismEncoder {
     pub fn new(graph_count: usize, error_ratio: f64) -> Self {
-        let checker = DegreeChecker;
-        let (graphs, original_graph_size) = checker.generate_isompic_graphs(graph_count);
+        let (mut graphs, original_graph_size) = generate_isompic_graphs(graph_count);
+        graphs.truncate(graph_count);
         let redundancy = Self::get_redundancy(original_graph_size, error_ratio);
         let graph_size = original_graph_size * redundancy;
 
@@ -38,7 +37,6 @@ impl IsomophismEncoder {
             graph_size,
             original_graph_size,
             redundancy,
-            checker,
         }
     }
 
@@ -78,9 +76,10 @@ impl IsomophismEncoder {
         let state = State::init_rand(&graph, self.original_graph_size, rng);
         let state = annealer.annealing(&graph, state, duration);
         let graph = state.restore_graph();
+        let checker = Vf2Checker::new(&graph);
 
-        for (i, g) in self.graphs.iter().enumerate().take(self.graph_count) {
-            if self.checker.are_isomorphic(&graph, g) {
+        for (i, g) in self.graphs.iter().enumerate() {
+            if checker.is_isomorphic(g) {
                 return Some(i);
             }
         }

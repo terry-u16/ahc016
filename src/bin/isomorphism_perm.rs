@@ -1,4 +1,7 @@
-use std::{ops::Index, time::Instant};
+use std::{
+    ops::Index,
+    time::{Duration, Instant},
+};
 
 use itertools::Itertools;
 
@@ -19,41 +22,46 @@ fn main() {
 }
 
 fn gen_isomorphisms_perm() -> Vec<(usize, Graph)> {
-    let since = Instant::now();
+    let mut duration = Duration::ZERO;
     let mut graphs = vec![];
 
     for bits in 0..(1 << EDGE_COUNTS) {
         let graph = gen_graph(bits);
         let checker = PermutationalChecker::new(&graph);
+
+        let since = Instant::now();
         let found = graphs.iter().any(|(_, g)| checker.is_isomorphic(g));
+        let until = Instant::now();
+        duration += until - since;
 
         if !found {
             graphs.push((bits, graph));
         }
     }
 
-    let until = Instant::now();
-    println!("{}s", (until - since).as_secs_f64());
+    println!("{}s", duration.as_secs_f64());
 
     graphs
 }
 
 fn gen_isomorphisms_vf2() -> Vec<(usize, Graph)> {
-    let since = Instant::now();
+    let mut duration = Duration::ZERO;
     let mut graphs = vec![];
 
     for bits in 0..(1 << EDGE_COUNTS) {
         let graph = gen_graph(bits);
         let checker = Vf2Checker::new(&graph);
+        let since = Instant::now();
         let found = graphs.iter().any(|(_, g)| checker.is_isomorphic(g));
+        let until = Instant::now();
+        duration += until - since;
 
         if !found {
             graphs.push((bits, graph));
         }
     }
 
-    let until = Instant::now();
-    println!("{}s", (until - since).as_secs_f64());
+    println!("{}s", duration.as_secs_f64());
 
     graphs
 }
