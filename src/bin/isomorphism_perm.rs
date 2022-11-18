@@ -6,6 +6,39 @@ const N: usize = 6;
 const EDGE_COUNTS: usize = N * (N - 1) / 2;
 
 fn main() {
+    let graphs_perm = gen_isomorphisms_perm();
+    let graphs_vf2 = gen_isomorphisms_vf2();
+
+    assert_eq!(graphs_perm, graphs_vf2);
+
+    println!("counts: {}", graphs_perm.len());
+
+    for (bits, _) in graphs_perm.iter() {
+        println!("{:0>1$b}", bits, EDGE_COUNTS);
+    }
+}
+
+fn gen_isomorphisms_perm() -> Vec<(usize, Graph)> {
+    let since = Instant::now();
+    let mut graphs = vec![];
+
+    for bits in 0..(1 << EDGE_COUNTS) {
+        let graph = gen_graph(bits);
+        let checker = PermutationalChecker::new(&graph);
+        let found = graphs.iter().any(|(_, g)| checker.is_isomorphic(g));
+
+        if !found {
+            graphs.push((bits, graph));
+        }
+    }
+
+    let until = Instant::now();
+    println!("{}s", (until - since).as_secs_f64());
+
+    graphs
+}
+
+fn gen_isomorphisms_vf2() -> Vec<(usize, Graph)> {
     let since = Instant::now();
     let mut graphs = vec![];
 
@@ -20,14 +53,9 @@ fn main() {
     }
 
     let until = Instant::now();
-
-    println!("counts: {}", graphs.len());
-
-    for (bits, _) in graphs.iter() {
-        println!("{:0>1$b}", bits, EDGE_COUNTS);
-    }
-
     println!("{}s", (until - since).as_secs_f64());
+
+    graphs
 }
 
 fn gen_graph(bits: usize) -> Graph {
@@ -393,7 +421,7 @@ impl From<&Graph> for AdjacencyListGraph {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Graph {
     pub n: usize,
     edges: Vec<Vec<bool>>,
