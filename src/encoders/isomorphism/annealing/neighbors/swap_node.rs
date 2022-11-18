@@ -1,5 +1,5 @@
 use super::Neighbor;
-use crate::encoders::isomophism::annealing::{binarygraph::BinaryGraph, state::State};
+use crate::encoders::isomorphism::annealing::{binarygraph::BinaryGraph, state::State};
 use rand::prelude::*;
 use rand_pcg::Pcg64Mcg;
 

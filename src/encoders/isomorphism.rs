@@ -4,7 +4,7 @@ use self::{
 };
 use super::Encoder;
 use crate::{
-    encoders::isomophism::annealing::annealer::Annealer, graph::Graph, utils::ChangeMinMax,
+    encoders::isomorphism::annealing::annealer::Annealer, graph::Graph, utils::ChangeMinMax,
 };
 use rand_pcg::Pcg64Mcg;
 
@@ -12,7 +12,7 @@ mod annealing;
 mod checker;
 
 #[derive(Debug, Clone)]
-pub struct IsomophismEncoder {
+pub struct IsomorphismEncoder {
     graphs: Vec<Graph>,
     /// 送信するグラフの種類数
     graph_count: usize,
@@ -24,7 +24,7 @@ pub struct IsomophismEncoder {
     redundancy: usize,
 }
 
-impl IsomophismEncoder {
+impl IsomorphismEncoder {
     pub fn new(graph_count: usize, error_ratio: f64) -> Self {
         let (mut graphs, original_graph_size) = generate_isompic_graphs(graph_count);
         graphs.truncate(graph_count);
@@ -89,7 +89,7 @@ impl IsomophismEncoder {
     }
 }
 
-impl Encoder for IsomophismEncoder {
+impl Encoder for IsomorphismEncoder {
     fn graph_size(&self) -> usize {
         self.graph_size
     }

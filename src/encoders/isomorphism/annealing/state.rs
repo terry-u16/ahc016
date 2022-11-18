@@ -248,7 +248,7 @@ mod test {
     use rand::Rng;
     use rand_pcg::Pcg64Mcg;
 
-    use crate::{encoders::isomophism::annealing::binarygraph::BinaryGraph, graph::Graph};
+    use crate::{encoders::isomorphism::annealing::binarygraph::BinaryGraph, graph::Graph};
 
     use super::State;
 

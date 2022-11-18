@@ -4,7 +4,7 @@ pub mod barcode;
 pub mod binomial;
 #[allow(dead_code)]
 pub mod clique;
-pub mod isomophism;
+pub mod isomorphism;
 
 use crate::graph::Graph;
 

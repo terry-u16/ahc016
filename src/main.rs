@@ -2,7 +2,7 @@ mod encoders;
 mod graph;
 mod utils;
 
-use crate::{encoders::isomophism::IsomophismEncoder, graph::Graph};
+use crate::{encoders::isomorphism::IsomorphismEncoder, graph::Graph};
 use encoders::Encoder;
 use proconio::source::line::LineSource;
 use proconio::*;
@@ -44,7 +44,7 @@ fn main() {
     let input = Input::read(&mut stdin);
 
     // グラフ生成
-    let encoder = IsomophismEncoder::new(input.graph_count, input.error_ratio);
+    let encoder = IsomorphismEncoder::new(input.graph_count, input.error_ratio);
 
     writeln!(stdout, "{}", encoder.graph_size()).unwrap();
 
