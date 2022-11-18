@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::{ops::Index, time::Instant};
 
 use itertools::Itertools;
 
@@ -6,27 +6,28 @@ const N: usize = 6;
 const EDGE_COUNTS: usize = N * (N - 1) / 2;
 
 fn main() {
+    let since = Instant::now();
     let mut graphs = vec![];
-    let checker = PermutationalChecker;
 
     for bits in 0..(1 << EDGE_COUNTS) {
         let graph = gen_graph(bits);
-        let mut found = false;
-
-        for (_, g) in graphs.iter() {
-            found |= checker.are_isomorphic(&graph, g);
-        }
+        let checker = Vf2Checker::new(&graph);
+        let found = graphs.iter().any(|(_, g)| checker.is_isomorphic(g));
 
         if !found {
             graphs.push((bits, graph));
         }
     }
 
+    let until = Instant::now();
+
     println!("counts: {}", graphs.len());
 
     for (bits, _) in graphs.iter() {
         println!("{:0>1$b}", bits, EDGE_COUNTS);
     }
+
+    println!("{}s", (until - since).as_secs_f64());
 }
 
 fn gen_graph(bits: usize) -> Graph {
@@ -49,15 +50,31 @@ fn gen_graph(bits: usize) -> Graph {
 /// グラフの同型性を判定するトレイト
 trait IsomophicChecker {
     /// 2つのグラフが同型かどうか判定する
-    fn are_isomorphic(&self, graph1: &Graph, graph2: &Graph) -> bool;
+    fn is_isomorphic(&self, graph: &Graph) -> bool;
 }
 
-#[derive(Debug, Clone, Copy)]
-struct PermutationalChecker;
+#[derive(Debug, Clone)]
+struct PermutationalChecker {
+    n: usize,
+    degs: Vec<u32>,
+    graph: Graph,
+}
 
+#[allow(dead_code)]
 impl PermutationalChecker {
+    fn new(graph: &Graph) -> Self {
+        let n = graph.n;
+        let degs = Self::get_degs(&graph);
+
+        Self {
+            n,
+            degs,
+            graph: graph.clone(),
+        }
+    }
+
     fn get_degs(graph: &Graph) -> Vec<u32> {
-        let mut degs = vec![0; N * (N - 1) / 2];
+        let mut degs = vec![0; N];
 
         for i in 0..N {
             for j in (i + 1)..N {
@@ -75,20 +92,19 @@ impl PermutationalChecker {
 }
 
 impl IsomophicChecker for PermutationalChecker {
-    fn are_isomorphic(&self, graph1: &Graph, graph2: &Graph) -> bool {
-        let deg1 = Self::get_degs(graph1);
-        let deg2 = Self::get_degs(graph2);
+    fn is_isomorphic(&self, graph: &Graph) -> bool {
+        let deg2 = Self::get_degs(graph);
 
-        return deg1 == deg2;
-
-        if deg1 != deg2 {
+        if self.degs != deg2 {
             return false;
         }
 
-        'main: for p in (0..N).permutations(N) {
-            for i in 0..N {
-                for j in (i + 1)..N {
-                    if graph1[i][j] != graph2[p[i]][p[j]] {
+        let n = self.n;
+
+        'main: for p in (0..n).permutations(n) {
+            for i in 0..n {
+                for j in (i + 1)..n {
+                    if self.graph[i][j] != graph[p[i]][p[j]] {
                         continue 'main;
                     }
                 }
@@ -103,31 +119,140 @@ impl IsomophicChecker for PermutationalChecker {
 
 /// VF2アルゴリズムによりグラフの同型性判定を行う構造体
 /// 参考: http://satemochi.blog.fc2.com/blog-entry-224.html
-#[derive(Debug, Clone, Copy)]
-struct Vf2Checker;
+#[derive(Debug, Clone)]
+struct Vf2Checker {
+    n: usize,
+    degs: Vec<u32>,
+    graph: AdjacencyListGraph,
+}
 
 impl IsomophicChecker for Vf2Checker {
-    fn are_isomorphic(&self, graph1: &Graph, graph2: &Graph) -> bool {
-        todo!()
+    fn is_isomorphic(&self, graph: &Graph) -> bool {
+        if self.n != graph.n {
+            return false;
+        }
+
+        let degs = Self::get_degs(&graph);
+
+        if self.degs != degs {
+            return false;
+        }
+
+        let graph = AdjacencyListGraph::from(graph);
+        let mut map12 = vec![None; self.n];
+        let mut map21 = vec![None; self.n];
+        let mut neighs1 = vec![false; self.n];
+        let mut neighs2 = vec![false; self.n];
+
+        Self::isomophism_dfs(
+            &self.graph,
+            &graph,
+            &mut map12,
+            &mut map21,
+            &mut neighs1,
+            &mut neighs2,
+            0,
+        )
     }
 }
 
 impl Vf2Checker {
+    fn new(graph: &Graph) -> Self {
+        let n = graph.n;
+        let degs = Self::get_degs(&graph);
+        let graph = AdjacencyListGraph::from(graph);
+
+        Self { n, degs, graph }
+    }
+
+    fn get_degs(graph: &Graph) -> Vec<u32> {
+        let n = graph.n;
+        let mut degs = vec![0; n];
+
+        for i in 0..n {
+            for j in (i + 1)..n {
+                if graph[i][j] {
+                    degs[i] += 1;
+                    degs[j] += 1;
+                }
+            }
+        }
+
+        degs.sort_unstable();
+
+        degs
+    }
+
     fn isomophism_dfs(
-        &self,
-        graph1: &Graph,
-        graph2: &Graph,
+        graph1: &AdjacencyListGraph,
+        graph2: &AdjacencyListGraph,
         map12: &mut [Option<usize>],
         map21: &mut [Option<usize>],
         neighs1: &mut [bool],
         neighs2: &mut [bool],
+        depth: usize,
     ) -> bool {
-        todo!();
+        let (vs1, v2) = Self::generate_candidates(graph1.n, map12, map21, neighs1, neighs2);
+        let mut stack1 = vec![];
+        let mut stack2 = vec![];
+
+        for &v1 in vs1.iter() {
+            let edges1 = &graph1.edges[v1];
+            let edges2 = &graph2.edges[v2];
+
+            if Self::is_syntactic_feasible(edges1, edges2, map12, map21, neighs1, neighs2) {
+                if depth + 1 == graph1.n {
+                    return true;
+                }
+
+                map12[v1] = Some(v2);
+                map21[v2] = Some(v1);
+                Self::update_neighs(graph1, neighs1, &mut stack1, v1);
+                Self::update_neighs(graph2, neighs2, &mut stack2, v2);
+
+                let found =
+                    Self::isomophism_dfs(graph1, graph2, map12, map21, neighs1, neighs2, depth + 1);
+                if found {
+                    return true;
+                }
+
+                map12[v1] = None;
+                map21[v2] = None;
+                Self::restore_neighs(neighs1, &mut stack1);
+                Self::restore_neighs(neighs2, &mut stack2);
+            }
+        }
+
+        false
+    }
+
+    fn update_neighs(
+        graph: &AdjacencyListGraph,
+        neighs: &mut [bool],
+        stack: &mut Vec<usize>,
+        v: usize,
+    ) {
+        if !neighs[v] {
+            neighs[v] = true;
+            stack.push(v);
+        }
+
+        for &next in graph.edges[v].iter() {
+            if !neighs[next] {
+                neighs[next] = true;
+                stack.push(next);
+            }
+        }
+    }
+
+    fn restore_neighs(neighs: &mut [bool], stack: &mut Vec<usize>) {
+        while let Some(v) = stack.pop() {
+            neighs[v] = false;
+        }
     }
 
     /// 次に調べる(graph1の頂点列, graph2の頂点)の候補を列挙する
     fn generate_candidates(
-        &self,
         n: usize,
         map12: &[Option<usize>],
         map21: &[Option<usize>],
@@ -156,11 +281,11 @@ impl Vf2Checker {
     }
 
     /// 新しく追加される頂点に隣接する頂点について、頂点相関の実行可能性を判定する
-    /// 
+    ///
     /// - 確定済みの点について全単射に矛盾が起きないか
     /// - 隣接点集合に含まれる頂点の数が等しいか
     /// - 隣接点集合に含まれない頂点の数が等しいか
-    /// 
+    ///
     /// についてチェック
     fn is_syntactic_feasible(
         edges1: &[usize],
@@ -210,7 +335,7 @@ impl Vf2Checker {
         fn count(edges: &[usize], map: &[Option<usize>], neighs: &[bool]) -> usize {
             edges
                 .iter()
-                .filter(|&&v| neighs[v] && map[v].is_none())
+                .filter(|&&v| neighs[v] && map[v].is_some())
                 .count()
         }
 
@@ -252,8 +377,8 @@ impl AdjacencyListGraph {
     }
 }
 
-impl From<Graph> for AdjacencyListGraph {
-    fn from(graph: Graph) -> Self {
+impl From<&Graph> for AdjacencyListGraph {
+    fn from(graph: &Graph) -> Self {
         let mut adj_graph = AdjacencyListGraph::new(graph.n);
 
         for u in 0..graph.n {
