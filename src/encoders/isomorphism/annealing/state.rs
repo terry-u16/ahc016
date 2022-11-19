@@ -10,6 +10,8 @@ pub struct State {
     group_count: usize,
     group_size: usize,
     groups: Vec<Vec<usize>>,
+    groups_u128: Vec<u128>,
+    graph_u128: Vec<u128>,
     self_counts: Vec<i32>,
     cross_counts: Vec<Vec<i32>>,
     score: i32,
@@ -34,10 +36,32 @@ impl State {
         let group_size = graph.n / group_count;
         assert!(graph.n == group_count * group_size);
 
+        let mut graph_u128 = vec![0; graph.n];
+
+        for i in 0..graph.n {
+            for j in 0..graph.n {
+                let edges = &mut graph_u128[i];
+
+                if graph[i][j] == 1 {
+                    *edges |= 1 << j;
+                }
+            }
+        }
+
+        let mut groups_u128 = vec![0; group_count];
+
+        for (group, u128) in groups.iter().zip(groups_u128.iter_mut()) {
+            for &v in group.iter() {
+                *u128 |= 1 << v;
+            }
+        }
+
         let mut state = Self {
             group_count,
             groups,
             group_size,
+            groups_u128,
+            graph_u128,
             self_counts: vec![0; group_count],
             cross_counts: vec![vec![0; group_count]; group_count],
             score: 0,
@@ -73,18 +97,30 @@ impl State {
             std::mem::swap(&mut i0, &mut i1);
         }
 
-        self.sub_relative_counts(graph, g0, g1, i0, i1);
-
-        let temp = self.groups[g0][i0];
-        self.groups[g0][i0] = self.groups[g1][i1];
-        self.groups[g1][i1] = temp;
-
-        self.add_relative_counts(graph, g0, g1, i0, i1);
+        unsafe {
+            self.sub_relative_counts(graph, g0, g1, i0, i1);
+            self.swap_inner(g0, i0, g1, i1);
+            self.add_relative_counts(graph, g0, g1, i0, i1);
+        }
 
         self.update_score_from_counts();
     }
 
-    fn sub_relative_counts(
+    fn swap_inner(&mut self, g0: usize, i0: usize, g1: usize, i1: usize) {
+        let temp = self.groups[g0][i0];
+        self.groups[g0][i0] = self.groups[g1][i1];
+        self.groups[g1][i1] = temp;
+
+        let u = 1 << self.groups[g0][i0];
+        let v = 1 << self.groups[g1][i1];
+        self.groups_u128[g0] ^= u;
+        self.groups_u128[g0] ^= v;
+        self.groups_u128[g1] ^= u;
+        self.groups_u128[g1] ^= v;
+    }
+
+    #[target_feature(enable = "popcnt")]
+    unsafe fn sub_relative_counts(
         &mut self,
         graph: &BinaryGraph,
         g0: usize,
@@ -96,24 +132,24 @@ impl State {
 
         for &(g0, i0) in [(g0, i0), (g1, i1)].iter() {
             let u = self.groups[g0][i0];
-            let edges = &graph[u];
+            let edges = self.graph_u128[u];
 
-            for (g1, group) in self.groups.iter().enumerate() {
+            for (g1, &group) in self.groups_u128.iter().enumerate() {
                 if g0 == g1 {
                     // self
                     let counts = &mut self.self_counts[g0];
 
-                    for &v in group.iter() {
-                        *counts -= edges[v];
-                    }
+                    let plus = (edges & group).count_ones() as i32;
+                    let minus = self.group_size as i32 - plus;
+                    *counts -= plus - minus;
                 } else {
                     // cross
                     let (g0, g1) = if g0 < g1 { (g0, g1) } else { (g1, g0) };
                     let counts = &mut self.cross_counts[g0][g1];
 
-                    for &v in group.iter() {
-                        *counts -= edges[v];
-                    }
+                    let plus = (edges & group).count_ones() as i32;
+                    let minus = self.group_size as i32 - plus;
+                    *counts -= plus - minus;
                 }
             }
         }
@@ -126,7 +162,8 @@ impl State {
         self.cross_counts[g0][g1] += graph[u][v];
     }
 
-    fn add_relative_counts(
+    #[target_feature(enable = "popcnt")]
+    unsafe fn add_relative_counts(
         &mut self,
         graph: &BinaryGraph,
         g0: usize,
@@ -138,24 +175,22 @@ impl State {
 
         for &(g0, i0) in [(g0, i0), (g1, i1)].iter() {
             let u = self.groups[g0][i0];
-            let edges = &graph[u];
+            let edges = self.graph_u128[u];
 
-            for (g1, group) in self.groups.iter().enumerate() {
+            for (g1, &group) in self.groups_u128.iter().enumerate() {
                 if g0 == g1 {
                     // self
                     let counts = &mut self.self_counts[g0];
-
-                    for &v in group.iter() {
-                        *counts += edges[v];
-                    }
+                    let plus = (edges & group).count_ones() as i32;
+                    let minus = self.group_size as i32 - plus;
+                    *counts += plus - minus;
                 } else {
                     // cross
                     let (g0, g1) = if g0 < g1 { (g0, g1) } else { (g1, g0) };
                     let counts = &mut self.cross_counts[g0][g1];
-
-                    for &v in group.iter() {
-                        *counts += edges[v];
-                    }
+                    let plus = (edges & group).count_ones() as i32;
+                    let minus = self.group_size as i32 - plus;
+                    *counts += plus - minus;
                 }
             }
         }
