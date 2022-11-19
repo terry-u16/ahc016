@@ -132,13 +132,14 @@ impl State {
             std::mem::swap(&mut i0, &mut i1);
         }
 
-        self.score = prev_score;
         let len = self.self_counts.len();
         self.self_counts.copy_from_slice(&self_counts_buf[..len]);
         let len = self.cross_counts.len();
         self.cross_counts.copy_from_slice(&cross_counts_buf[..len]);
 
         self.swap_inner(g0, i0, g1, i1);
+
+        self.score = prev_score;
     }
 
     fn swap_inner(&mut self, g0: usize, i0: usize, g1: usize, i1: usize) {
@@ -381,6 +382,11 @@ mod test {
                 &mut buffer1,
                 &mut buffer2,
             );
+
+            if rng.gen_bool(0.5) {
+                state.revert_swap(&graph, g0, g1, i0, i1, prev_score, &buffer1, &buffer2);
+            }
+
             let actual = state.score;
 
             state.update_score_all(&graph);
