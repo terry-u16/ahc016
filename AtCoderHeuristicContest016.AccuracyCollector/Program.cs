@@ -6,8 +6,9 @@ using System.Collections.Concurrent;
 
 var maxSizes = new int[] { -1, -1, -1, -1, 11, 34, 100 };
 var mList = new int[] { 10, 11, 20, 25, 28, 30, 31, 32, 33, 34, 40, 50, 60, 70, 80, 90, 100 };
+var scoreCoeffs = new double[] { 1.0, 1.5, 2.0, 2.5, 3.0 };
 
-var parameters = Enumerable.Range(4, 3).SelectMany(i => mList.Select(j => (i, j))).Reverse();
+var parameters = Enumerable.Range(4, 3).SelectMany(i => mList.Select(j => (i, j))).SelectMany(p => scoreCoeffs.Select(c => (p.i, p.j, c)));
 await Task.WhenAll(BuildAsync("ahc016"), BuildAsync("accuracy_collector"));
 
 var options = new ParallelOptions
@@ -21,7 +22,7 @@ var bag = new ConcurrentBag<Statistics>();
 
 await Parallel.ForEachAsync(parameters, options, async (param, ct) =>
 {
-    var (bits, m) = param;
+    var (bits, m, scoreCoef) = param;
 
     if (maxSizes[bits] < m)
     {
@@ -39,7 +40,8 @@ await Parallel.ForEachAsync(parameters, options, async (param, ct) =>
         for (int redundancy = minRedundancy; redundancy * bits <= 100; redundancy++)
         {
             var graphSize = bits * redundancy;
-            var output = ProcessX.StartAsync($"accuracy_collector.exe -b {bits} -e {epsDouble} -r {redundancy} -m {m} -c ahc016.exe");
+
+            var output = ProcessX.StartAsync($"accuracy_collector.exe -b {bits} -e {epsDouble} -r {redundancy} -m {m} -s {scoreCoef} -c ahc016.exe");
             var list = new List<int>();
 
             await foreach (var s in output)
@@ -52,7 +54,7 @@ await Parallel.ForEachAsync(parameters, options, async (param, ct) =>
             var accuracy = (double)accepted / trialCount;
             const int actualTrialCount = 100;
             var expectedScore = ScoreCalcurator.CalculateExpectedScore(actualTrialCount, accuracy, graphSize);
-            var statistics = new Statistics(m, epsDouble, bits, redundancy, trialCount, accepted, accuracy, expectedScore);
+            var statistics = new Statistics(m, epsDouble, bits, redundancy, scoreCoef, trialCount, accepted, accuracy, expectedScore);
             bag.Add(statistics);
             Console.WriteLine(statistics);
 
@@ -80,7 +82,14 @@ var contractResolver = new DefaultContractResolver
     NamingStrategy = new SnakeCaseNamingStrategy()
 };
 
-var statistics = bag.OrderBy(s => s.Bits).ThenBy(s => s.M).ThenBy(s => s.ErrorRatio).ThenBy(s => s.Redundancy).ToArray();
+var statistics = bag
+    .OrderBy(s => s.Bits)
+    .ThenBy(s => s.M)
+    .ThenBy(s => s.ScoreCoef)
+    .ThenBy(s => s.ErrorRatio)
+    .ThenBy(s => s.Redundancy)
+    .ToArray();
+
 var json = JsonConvert.SerializeObject(statistics, new JsonSerializerSettings
 {
     ContractResolver = contractResolver,

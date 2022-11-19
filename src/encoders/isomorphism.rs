@@ -24,6 +24,8 @@ pub struct IsomorphismEncoder {
     original_graph_size: usize,
     /// 冗長性
     redundancy: usize,
+    /// 焼きなましスコアのグループ内:グループ外の重みの比
+    score_coef: f64,
 }
 
 impl IsomorphismEncoder {
@@ -32,6 +34,7 @@ impl IsomorphismEncoder {
         error_ratio: f64,
         bits: Option<usize>,
         redundancy: Option<usize>,
+        score_coef: Option<f64>,
     ) -> Self {
         let (auto_bits, auto_redundancy) = Self::get_storategy(graph_count, error_ratio);
 
@@ -47,6 +50,8 @@ impl IsomorphismEncoder {
             )
         };
 
+        let score_coef = score_coef.unwrap_or(2.0);
+
         graphs.truncate(graph_count);
         let redundancy = redundancy.unwrap_or(auto_redundancy);
         let graph_size = original_graph_size * redundancy;
@@ -57,6 +62,7 @@ impl IsomorphismEncoder {
             graph_size,
             original_graph_size,
             redundancy,
+            score_coef,
         }
     }
 
@@ -73,7 +79,7 @@ impl IsomorphismEncoder {
         duration: f64,
         rng: &mut Pcg64Mcg,
     ) -> Option<usize> {
-        let state = State::init_rand(&graph, self.original_graph_size, rng);
+        let state = State::init_rand(&graph, self.original_graph_size, self.score_coef, rng);
         let state = annealer.annealing(&graph, state, duration);
         let graph = state.restore_graph();
         let checker = Vf2Checker::new(&graph);

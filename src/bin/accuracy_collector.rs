@@ -4,7 +4,7 @@ use rand::prelude::*;
 use std::io::{prelude::*, BufReader};
 use std::process::{ChildStdout, Stdio};
 
-const TRIAL_COUNT: usize = 1000;
+const TRIAL_COUNT: usize = 200;
 
 #[derive(Parser, Debug)]
 struct AppArg {
@@ -16,6 +16,8 @@ struct AppArg {
     m: usize,
     #[clap(short = 'r', long = "redundancy")]
     redundancy: usize,
+    #[clap(short = 's', long = "score_coef")]
+    score_coef: f64,
     #[clap(short = 'c', long = "command")]
     command: String,
 }
@@ -121,6 +123,7 @@ fn main() {
         query_count.to_string(),
         args.bits.to_string(),
         args.redundancy.to_string(),
+        args.score_coef.to_string(),
     ];
 
     let mut p = std::process::Command::new(args.command)

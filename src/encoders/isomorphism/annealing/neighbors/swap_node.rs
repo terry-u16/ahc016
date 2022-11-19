@@ -9,7 +9,7 @@ pub struct SwapNode {
     group1: usize,
     index0: usize,
     index1: usize,
-    prev_score: i32,
+    prev_score: f64,
     self_counts_buffer: [i32; 6],
     cross_counts_buffer: [i32; 15],
 }
@@ -29,7 +29,7 @@ impl SwapNode {
             group1,
             index0,
             index1,
-            prev_score: !0,
+            prev_score: 0.0,
             self_counts_buffer: [0; 6],
             cross_counts_buffer: [0; 15],
         }

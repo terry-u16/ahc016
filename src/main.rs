@@ -18,6 +18,7 @@ struct AppArgs {
     query_count: usize,
     bits: Option<usize>,
     redundancy: Option<usize>,
+    score_coef: Option<f64>,
 }
 
 impl AppArgs {
@@ -40,10 +41,17 @@ impl AppArgs {
             Some(std::env::args().nth(3).unwrap().parse().unwrap())
         };
 
+        let score_coef = if std::env::args().len() < 5 {
+            None
+        } else {
+            Some(std::env::args().nth(4).unwrap().parse().unwrap())
+        };
+
         Self {
             query_count,
             bits,
             redundancy,
+            score_coef,
         }
     }
 }
@@ -86,6 +94,7 @@ fn main() {
         input.error_ratio,
         app_args.bits,
         app_args.redundancy,
+        app_args.score_coef,
     );
 
     writeln!(stdout, "{}", encoder.graph_size()).unwrap();

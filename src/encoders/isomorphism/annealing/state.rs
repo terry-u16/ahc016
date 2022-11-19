@@ -14,11 +14,17 @@ pub struct State {
     graph_u128: Vec<u128>,
     self_counts: Vec<i32>,
     cross_counts: Vec<i32>,
-    score: i32,
+    score: f64,
+    score_coef: f64,
 }
 
 impl State {
-    pub fn init_rand(graph: &BinaryGraph, group_count: usize, rng: &mut Pcg64Mcg) -> Self {
+    pub fn init_rand(
+        graph: &BinaryGraph,
+        group_count: usize,
+        score_coef: f64,
+        rng: &mut Pcg64Mcg,
+    ) -> Self {
         let mut permutation = (0..graph.n).collect_vec();
         permutation.shuffle(rng);
 
@@ -28,10 +34,10 @@ impl State {
             groups[i % group_count].push(p);
         }
 
-        Self::new(graph, groups)
+        Self::new(graph, groups, score_coef)
     }
 
-    fn new(graph: &BinaryGraph, groups: Vec<Vec<usize>>) -> Self {
+    fn new(graph: &BinaryGraph, groups: Vec<Vec<usize>>, score_coef: f64) -> Self {
         let group_count = groups.len();
         let group_size = graph.n / group_count;
         assert!(graph.n == group_count * group_size);
@@ -64,7 +70,8 @@ impl State {
             graph_u128,
             self_counts: vec![0; group_count],
             cross_counts: vec![0; group_count * (group_count - 1) / 2],
-            score: 0,
+            score: 0.0,
+            score_coef,
         };
 
         state.update_score_all(graph);
@@ -79,7 +86,7 @@ impl State {
         self.group_size
     }
 
-    pub fn score(&self) -> i32 {
+    pub fn score(&self) -> f64 {
         self.score
     }
 
@@ -90,7 +97,7 @@ impl State {
         mut g1: usize,
         mut i0: usize,
         mut i1: usize,
-        prev_score: &mut i32,
+        prev_score: &mut f64,
         self_counts_buf: &mut [i32],
         cross_counts_buf: &mut [i32],
     ) {
@@ -122,7 +129,7 @@ impl State {
         mut g1: usize,
         mut i0: usize,
         mut i1: usize,
-        prev_score: i32,
+        prev_score: f64,
         self_counts_buf: &[i32],
         cross_counts_buf: &[i32],
     ) {
@@ -256,18 +263,21 @@ impl State {
     }
 
     fn update_score_from_counts(&mut self) {
-        self.score = 0;
+        let mut inside_score = 0;
 
         // グループ内のスコアを計算 (Σi 2max(ci, 0))
         for &c in self.self_counts.iter() {
-            const COEFFICIENT: i32 = 2;
-            self.score += c.max(0) * COEFFICIENT;
+            inside_score += c.max(0);
         }
+
+        let mut outside_score = 0;
 
         // グループ間のスコアを計算 (Σij |cij|)
         for c in self.cross_counts.iter() {
-            self.score += c.abs();
+            outside_score += c.abs();
         }
+
+        self.score = inside_score as f64 * self.score_coef + outside_score as f64;
     }
 
     pub fn restore_graph(&self) -> Graph {
@@ -306,10 +316,10 @@ mod test {
     fn score_test() {
         let graph = gen_graph();
         let groups = vec![vec![0, 1, 2], vec![3, 4, 5]];
-        let state = State::new(&graph, groups);
+        let state = State::new(&graph, groups, 2.0);
 
         let expected = state.score;
-        let actual = 2 * 2 * 3 + 9;
+        let actual = (2 * 2 * 3 + 9) as f64;
 
         assert_eq!(expected, actual);
     }
@@ -318,10 +328,10 @@ mod test {
     fn swap_test() {
         let graph = gen_graph();
         let groups = vec![vec![0, 1, 2], vec![3, 4, 5]];
-        let mut state = State::new(&graph, groups);
+        let mut state = State::new(&graph, groups, 2.0);
 
         // 頂点0と3をswap
-        let mut prev_score = 0;
+        let mut prev_score = 0.0;
         let mut buffer1 = [0; 6];
         let mut buffer2 = [0; 15];
         state.swap_nodes(
@@ -361,7 +371,7 @@ mod test {
         }
 
         let graph = BinaryGraph::new(&graph);
-        let mut state = State::init_rand(&graph, GROUP_COUNT, &mut rng);
+        let mut state = State::init_rand(&graph, GROUP_COUNT, 2.0, &mut rng);
 
         for _ in 0..TRIAL_COUNT {
             let g0 = rng.gen_range(0, state.group_count);
@@ -369,7 +379,7 @@ mod test {
             let i0 = rng.gen_range(0, N / GROUP_COUNT);
             let i1 = rng.gen_range(0, N / GROUP_COUNT);
 
-            let mut prev_score = 0;
+            let mut prev_score = 0.0;
             let mut buffer1 = [0; 6];
             let mut buffer2 = [0; 15];
             state.swap_nodes(
