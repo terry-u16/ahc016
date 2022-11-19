@@ -11,7 +11,7 @@ use std::{
     time::Instant,
 };
 
-const DEFAULT_QUERY_COUNT: usize = 1000;
+const DEFAULT_QUERY_COUNT: usize = 100;
 
 #[derive(Debug, Clone, Copy)]
 struct AppArgs {
