@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33103.184
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtCoderHeuristicContest016.Sampler", "AtCoderHeuristicContest016.Sampler\AtCoderHeuristicContest016.Sampler.csproj", "{81436C6D-0E72-4B41-BCBE-361C84618A86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AtCoderHeuristicContest016.Sampler", "AtCoderHeuristicContest016.Sampler\AtCoderHeuristicContest016.Sampler.csproj", "{81436C6D-0E72-4B41-BCBE-361C84618A86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtCoderHeuristicContest016.AccuracyCollector", "AtCoderHeuristicContest016.AccuracyCollector\AtCoderHeuristicContest016.AccuracyCollector.csproj", "{44C9E4DB-793D-49C9-9FDC-C00D8AAC64A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{81436C6D-0E72-4B41-BCBE-361C84618A86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81436C6D-0E72-4B41-BCBE-361C84618A86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81436C6D-0E72-4B41-BCBE-361C84618A86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44C9E4DB-793D-49C9-9FDC-C00D8AAC64A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44C9E4DB-793D-49C9-9FDC-C00D8AAC64A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44C9E4DB-793D-49C9-9FDC-C00D8AAC64A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44C9E4DB-793D-49C9-9FDC-C00D8AAC64A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

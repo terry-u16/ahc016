@@ -341,30 +341,35 @@ impl From<&Graph> for AdjacencyListGraph {
 
 /// 互いに同型でないグラフをn個生成する
 pub fn generate_isompic_graphs(n: usize, error_ratio: f64) -> (Vec<Graph>, usize) {
-    let error_ratio = (error_ratio * 100.0).round() as usize;
-    let accuracy_matrix = get_accuracy_matrix();
-    let graphs = gen_graphs(&GRAPHS_4, 4);
+    for bits in 4..=6 {
+        let graphs = try_generate_isompic_graphs(n, error_ratio, bits);
 
-    if graphs.len() >= n {
-        let graphs = take_n_graphs(graphs, &accuracy_matrix, n, error_ratio, 4);
-        return (graphs, 4);
-    }
-
-    let graphs = gen_graphs(&GRAPHS_5, 5);
-
-    if graphs.len() >= n {
-        let graphs = take_n_graphs(graphs, &accuracy_matrix, n, error_ratio, 5);
-        return (graphs, 5);
-    }
-
-    let graphs = gen_graphs(&GRAPHS_6, 6);
-
-    if graphs.len() >= n {
-        let graphs = take_n_graphs(graphs, &accuracy_matrix, n, error_ratio, 6);
-        return (graphs, 6);
+        if let Some(graphs) = graphs {
+            return (graphs, bits);
+        }
     }
 
     unreachable!();
+}
+
+/// 互いに同型でないグラフをn個生成する
+pub fn try_generate_isompic_graphs(n: usize, error_ratio: f64, bits: usize) -> Option<Vec<Graph>> {
+    let error_ratio = (error_ratio * 100.0).round() as usize;
+    let accuracy_matrix = get_accuracy_matrix();
+    let graphs = if bits == 4 {
+        gen_graphs(&GRAPHS_4, 4)
+    } else if bits == 5 {
+        gen_graphs(&GRAPHS_5, 5)
+    } else {
+        gen_graphs(&GRAPHS_6, 6)
+    };
+
+    if graphs.len() >= n {
+        let graphs = take_n_graphs(graphs, &accuracy_matrix, n, error_ratio, bits);
+        Some(graphs)
+    } else {
+        None
+    }
 }
 
 fn take_n_graphs(

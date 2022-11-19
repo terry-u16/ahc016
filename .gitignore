@@ -8,3 +8,5 @@ __pycache__
 .vs
 /AtCoderHeuristicContest016.Sampler/bin
 /AtCoderHeuristicContest016.Sampler/obj
+/AtCoderHeuristicContest016.AccuracyCollector/bin
+/AtCoderHeuristicContest016.AccuracyCollector/obj

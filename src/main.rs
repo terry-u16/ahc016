@@ -11,11 +11,13 @@ use std::{
     time::Instant,
 };
 
-const DEFAULT_QUERY_COUNT: usize = 100;
+const DEFAULT_QUERY_COUNT: usize = 1000;
 
 #[derive(Debug, Clone, Copy)]
 struct AppArgs {
     query_count: usize,
+    bits: Option<usize>,
+    redundancy: Option<usize>,
 }
 
 impl AppArgs {
@@ -26,7 +28,23 @@ impl AppArgs {
             std::env::args().nth(1).unwrap().parse().unwrap()
         };
 
-        Self { query_count }
+        let bits = if std::env::args().len() < 3 {
+            None
+        } else {
+            Some(std::env::args().nth(2).unwrap().parse().unwrap())
+        };
+
+        let redundancy = if std::env::args().len() < 4 {
+            None
+        } else {
+            Some(std::env::args().nth(3).unwrap().parse().unwrap())
+        };
+
+        Self {
+            query_count,
+            bits,
+            redundancy,
+        }
     }
 }
 
@@ -63,7 +81,12 @@ fn main() {
     let input = Input::read(&mut stdin);
 
     // グラフ生成
-    let encoder = IsomorphismEncoder::new(input.graph_count, input.error_ratio);
+    let encoder = IsomorphismEncoder::new(
+        input.graph_count,
+        input.error_ratio,
+        app_args.bits,
+        app_args.redundancy,
+    );
 
     writeln!(stdout, "{}", encoder.graph_size()).unwrap();
 

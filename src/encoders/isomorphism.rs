@@ -1,6 +1,6 @@
 use self::{
     annealing::{binarygraph::BinaryGraph, state::State},
-    checker::{generate_isompic_graphs, IsomophicChecker, Vf2Checker},
+    checker::{generate_isompic_graphs, try_generate_isompic_graphs, IsomophicChecker, Vf2Checker},
 };
 use super::Encoder;
 use crate::{
@@ -25,10 +25,24 @@ pub struct IsomorphismEncoder {
 }
 
 impl IsomorphismEncoder {
-    pub fn new(graph_count: usize, error_ratio: f64) -> Self {
-        let (mut graphs, original_graph_size) = generate_isompic_graphs(graph_count, error_ratio);
+    pub fn new(
+        graph_count: usize,
+        error_ratio: f64,
+        bits: Option<usize>,
+        redundancy: Option<usize>,
+    ) -> Self {
+        let (mut graphs, original_graph_size) = if let Some(bits) = bits {
+            (
+                try_generate_isompic_graphs(graph_count, error_ratio, bits).unwrap(),
+                bits,
+            )
+        } else {
+            generate_isompic_graphs(graph_count, error_ratio)
+        };
+
         graphs.truncate(graph_count);
-        let redundancy = Self::get_redundancy(original_graph_size, error_ratio);
+        let redundancy =
+            redundancy.unwrap_or(Self::get_redundancy(original_graph_size, error_ratio));
         let graph_size = original_graph_size * redundancy;
 
         Self {
