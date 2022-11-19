@@ -50,7 +50,8 @@ await Parallel.ForEachAsync(parameters, options, async (param, ct) =>
             var trialCount = list[0];
             var accepted = list[1];
             var accuracy = (double)accepted / trialCount;
-            var expectedScore = ScoreCalcurator.CalculateExpectedScore(trialCount, accuracy, graphSize);
+            const int actualTrialCount = 100;
+            var expectedScore = ScoreCalcurator.CalculateExpectedScore(actualTrialCount, accuracy, graphSize);
             var statistics = new Statistics(m, epsDouble, bits, redundancy, trialCount, accepted, accuracy, expectedScore);
             bag.Add(statistics);
             Console.WriteLine(statistics);
@@ -60,7 +61,8 @@ await Parallel.ForEachAsync(parameters, options, async (param, ct) =>
                 bestExpected = expectedScore;
                 minRedundancy = redundancy;
 
-                if (trialCount == accepted)
+                // 次に全問正解しても超えられない場合はスルー
+                if (expectedScore > ScoreCalcurator.CalculateExpectedScore(actualTrialCount, 1.0, bits * (redundancy + 1)))
                 {
                     break;
                 }
