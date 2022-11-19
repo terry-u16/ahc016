@@ -28,8 +28,8 @@ impl Annealer {
         let duration_inv = 1.0 / duration;
         let since = std::time::Instant::now();
 
-        let temp0 = 1e2;
-        let temp1 = 1e-1;
+        let temp0 = 1e1 * graph.n as f64 * 0.1;
+        let temp1 = 1e-1 * graph.n as f64 * 0.1;
         let mut inv_temp = 1.0 / temp0;
         let generator = NeighborGenerator;
 

@@ -168,9 +168,10 @@ impl State {
                     // self
                     let counts = &mut self.self_counts[g0];
 
+                    // plus - minus = plus - (group_size - plus) = 2 * plus - group_size
+                    // group_size は後で足し直すので不要
                     let plus = (edges & group).count_ones() as i32;
-                    let minus = self.group_size as i32 - plus;
-                    *counts -= plus - minus;
+                    *counts -= 2 * plus;
                 } else {
                     // cross
                     let (g0, g1) = if g0 < g1 { (g0, g1) } else { (g1, g0) };
@@ -178,8 +179,7 @@ impl State {
                     let counts = &mut self.cross_counts[index];
 
                     let plus = (edges & group).count_ones() as i32;
-                    let minus = self.group_size as i32 - plus;
-                    *counts -= plus - minus;
+                    *counts -= 2 * plus;
                 }
             }
         }
@@ -198,8 +198,7 @@ impl State {
                     // self
                     let counts = &mut self.self_counts[g0];
                     let plus = (edges & group).count_ones() as i32;
-                    let minus = self.group_size as i32 - plus;
-                    *counts += plus - minus;
+                    *counts += 2 * plus;
                 } else {
                     // cross
                     let (g0, g1) = if g0 < g1 { (g0, g1) } else { (g1, g0) };
@@ -207,8 +206,7 @@ impl State {
                     let counts = &mut self.cross_counts[index];
 
                     let plus = (edges & group).count_ones() as i32;
-                    let minus = self.group_size as i32 - plus;
-                    *counts += plus - minus;
+                    *counts += 2 * plus;
                 }
             }
         }
