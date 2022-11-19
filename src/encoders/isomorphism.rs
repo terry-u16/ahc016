@@ -26,7 +26,7 @@ pub struct IsomorphismEncoder {
 
 impl IsomorphismEncoder {
     pub fn new(graph_count: usize, error_ratio: f64) -> Self {
-        let (mut graphs, original_graph_size) = generate_isompic_graphs(graph_count);
+        let (mut graphs, original_graph_size) = generate_isompic_graphs(graph_count, error_ratio);
         graphs.truncate(graph_count);
         let redundancy = Self::get_redundancy(original_graph_size, error_ratio);
         let graph_size = original_graph_size * redundancy;
@@ -130,7 +130,7 @@ impl Encoder for IsomorphismEncoder {
     fn decode(&self, graph: &Graph, duration: f64) -> usize {
         let mut rng = Pcg64Mcg::new(42);
         let graph = BinaryGraph::new(graph);
-        let annealer = Annealer::new(true);
+        let annealer = Annealer::new(false);
         let mut votes = vec![0; self.graph_count];
 
         const TRIAL_COUNT: usize = 1;
