@@ -133,7 +133,7 @@ impl Encoder for IsomorphismEncoder {
         let annealer = Annealer::new(false);
         let mut votes = vec![0; self.graph_count];
 
-        const TRIAL_COUNT: usize = 1;
+        const TRIAL_COUNT: usize = 5;
         let each_duration = duration / TRIAL_COUNT as f64;
 
         // 多数決を取る
