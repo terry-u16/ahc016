@@ -5,8 +5,8 @@ use super::{binarygraph::BinaryGraph, state::State};
 use rand_pcg::Pcg64Mcg;
 
 pub trait Neighbor {
-    fn apply(&self, graph: &BinaryGraph, state: &mut State);
-    fn rollback(&self, graph: &BinaryGraph, state: &mut State);
+    fn apply(&mut self, graph: &BinaryGraph, state: &mut State);
+    fn rollback(&mut self, graph: &BinaryGraph, state: &mut State);
 }
 
 pub struct NeighborGenerator;

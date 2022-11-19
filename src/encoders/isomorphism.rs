@@ -130,7 +130,7 @@ impl Encoder for IsomorphismEncoder {
     fn decode(&self, graph: &Graph, duration: f64) -> usize {
         let mut rng = Pcg64Mcg::new(42);
         let graph = BinaryGraph::new(graph);
-        let annealer = Annealer::new(false);
+        let annealer = Annealer::new(true);
         let mut votes = vec![0; self.graph_count];
 
         const TRIAL_COUNT: usize = 1;

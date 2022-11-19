@@ -3,12 +3,15 @@ use crate::encoders::isomorphism::annealing::{binarygraph::BinaryGraph, state::S
 use rand::prelude::*;
 use rand_pcg::Pcg64Mcg;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct SwapNode {
     group0: usize,
     group1: usize,
     index0: usize,
     index1: usize,
+    prev_score: i32,
+    self_counts_buffer: [i32; 6],
+    cross_counts_buffer: [i32; 15],
 }
 
 impl SwapNode {
@@ -26,16 +29,37 @@ impl SwapNode {
             group1,
             index0,
             index1,
+            prev_score: !0,
+            self_counts_buffer: [0; 6],
+            cross_counts_buffer: [0; 15],
         }
     }
 }
 
 impl Neighbor for SwapNode {
-    fn apply(&self, graph: &BinaryGraph, state: &mut State) {
-        state.swap_nodes(graph, self.group0, self.group1, self.index0, self.index1)
+    fn apply(&mut self, graph: &BinaryGraph, state: &mut State) {
+        state.swap_nodes(
+            graph,
+            self.group0,
+            self.group1,
+            self.index0,
+            self.index1,
+            &mut self.prev_score,
+            &mut self.self_counts_buffer,
+            &mut self.cross_counts_buffer,
+        )
     }
 
-    fn rollback(&self, graph: &BinaryGraph, state: &mut State) {
-        state.swap_nodes(graph, self.group0, self.group1, self.index0, self.index1)
+    fn rollback(&mut self, graph: &BinaryGraph, state: &mut State) {
+        state.revert_swap(
+            graph,
+            self.group0,
+            self.group1,
+            self.index0,
+            self.index1,
+            self.prev_score,
+            &self.self_counts_buffer,
+            &self.cross_counts_buffer,
+        )
     }
 }

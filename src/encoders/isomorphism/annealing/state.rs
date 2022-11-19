@@ -13,7 +13,7 @@ pub struct State {
     groups_u128: Vec<u128>,
     graph_u128: Vec<u128>,
     self_counts: Vec<i32>,
-    cross_counts: Vec<Vec<i32>>,
+    cross_counts: Vec<i32>,
     score: i32,
 }
 
@@ -63,7 +63,7 @@ impl State {
             groups_u128,
             graph_u128,
             self_counts: vec![0; group_count],
-            cross_counts: vec![vec![0; group_count]; group_count],
+            cross_counts: vec![0; group_count * (group_count - 1) / 2],
             score: 0,
         };
 
@@ -90,12 +90,21 @@ impl State {
         mut g1: usize,
         mut i0: usize,
         mut i1: usize,
+        prev_score: &mut i32,
+        self_counts_buf: &mut [i32],
+        cross_counts_buf: &mut [i32],
     ) {
         assert!(g0 != g1);
         if g0 > g1 {
             std::mem::swap(&mut g0, &mut g1);
             std::mem::swap(&mut i0, &mut i1);
         }
+
+        *prev_score = self.score;
+        let len = self.self_counts.len();
+        self_counts_buf[..len].copy_from_slice(&self.self_counts);
+        let len = self.cross_counts.len();
+        cross_counts_buf[..len].copy_from_slice(&self.cross_counts);
 
         unsafe {
             self.sub_relative_counts(g0, g1, i0, i1);
@@ -106,13 +115,39 @@ impl State {
         self.update_score_from_counts();
     }
 
+    pub fn revert_swap(
+        &mut self,
+        _graph: &BinaryGraph,
+        mut g0: usize,
+        mut g1: usize,
+        mut i0: usize,
+        mut i1: usize,
+        prev_score: i32,
+        self_counts_buf: &[i32],
+        cross_counts_buf: &[i32],
+    ) {
+        assert!(g0 != g1);
+        if g0 > g1 {
+            std::mem::swap(&mut g0, &mut g1);
+            std::mem::swap(&mut i0, &mut i1);
+        }
+
+        self.score = prev_score;
+        let len = self.self_counts.len();
+        self.self_counts.copy_from_slice(&self_counts_buf[..len]);
+        let len = self.cross_counts.len();
+        self.cross_counts.copy_from_slice(&cross_counts_buf[..len]);
+
+        self.swap_inner(g0, i0, g1, i1);
+    }
+
     fn swap_inner(&mut self, g0: usize, i0: usize, g1: usize, i1: usize) {
-        let temp = self.groups[g0][i0];
-        self.groups[g0][i0] = self.groups[g1][i1];
-        self.groups[g1][i1] = temp;
+        let (first, second) = self.groups.split_at_mut(g0 + 1);
+        let u = &mut first[g0][i0];
+        let v = &mut second[g1 - g0 - 1][i1];
+        std::mem::swap(u, v);
 
-        let xor = (1 << self.groups[g0][i0]) | (1 << self.groups[g1][i1]);
-
+        let xor = (1 << *u) | (1 << *v);
         self.groups_u128[g0] ^= xor;
         self.groups_u128[g1] ^= xor;
     }
@@ -126,9 +161,9 @@ impl State {
         // 途中足しすぎたり引きすぎたりするが、add_relative_counts()で打ち消されるため問題ない
         for &(g0, i0) in [(g0, i0), (g1, i1)].iter() {
             let u = self.groups[g0][i0];
-            let edges = self.graph_u128[u];
+            let edges = &self.graph_u128[u];
 
-            for (g1, &group) in self.groups_u128.iter().enumerate() {
+            for (g1, group) in self.groups_u128.iter().enumerate() {
                 if g0 == g1 {
                     // self
                     let counts = &mut self.self_counts[g0];
@@ -139,7 +174,8 @@ impl State {
                 } else {
                     // cross
                     let (g0, g1) = if g0 < g1 { (g0, g1) } else { (g1, g0) };
-                    let counts = &mut self.cross_counts[g0][g1];
+                    let index = self.cross_index(g0, g1);
+                    let counts = &mut self.cross_counts[index];
 
                     let plus = (edges & group).count_ones() as i32;
                     let minus = self.group_size as i32 - plus;
@@ -157,7 +193,7 @@ impl State {
             let u = self.groups[g0][i0];
             let edges = self.graph_u128[u];
 
-            for (g1, &group) in self.groups_u128.iter().enumerate() {
+            for (g1, group) in self.groups_u128.iter().enumerate() {
                 if g0 == g1 {
                     // self
                     let counts = &mut self.self_counts[g0];
@@ -167,7 +203,9 @@ impl State {
                 } else {
                     // cross
                     let (g0, g1) = if g0 < g1 { (g0, g1) } else { (g1, g0) };
-                    let counts = &mut self.cross_counts[g0][g1];
+                    let index = self.cross_index(g0, g1);
+                    let counts = &mut self.cross_counts[index];
+
                     let plus = (edges & group).count_ones() as i32;
                     let minus = self.group_size as i32 - plus;
                     *counts += plus - minus;
@@ -181,7 +219,7 @@ impl State {
             *c = 0;
         }
 
-        for c in self.cross_counts.iter_mut().flatten() {
+        for c in self.cross_counts.iter_mut() {
             *c = 0;
         }
 
@@ -203,7 +241,8 @@ impl State {
             let group0 = &self.groups[g0];
             for g1 in (g0 + 1)..self.group_count {
                 let group1 = &self.groups[g1];
-                let count = &mut self.cross_counts[g0][g1];
+                let index = self.cross_index(g0, g1);
+                let count = &mut self.cross_counts[index];
 
                 for &u in group0.iter() {
                     let edges = &graph[u];
@@ -227,12 +266,8 @@ impl State {
         }
 
         // グループ間のスコアを計算 (Σij |cij|)
-        for c0 in 0..self.group_count {
-            let counts = &self.cross_counts[c0];
-
-            for c1 in (c0 + 1)..self.group_count {
-                self.score += counts[c1].abs();
-            }
+        for c in self.cross_counts.iter() {
+            self.score += c.abs();
         }
     }
 
@@ -241,13 +276,21 @@ impl State {
 
         for i in 0..self.group_count {
             for j in (i + 1)..self.group_count {
-                if self.cross_counts[i][j] > 0 {
+                if self.cross_counts[self.cross_index(i, j)] > 0 {
                     restored_graph.connect(i, j);
                 }
             }
         }
 
         restored_graph
+    }
+
+    fn cross_index(&self, i: usize, j: usize) -> usize {
+        let index = i * self.group_count + j;
+
+        // 下三角部分を余計に数えているので引く
+        let exceeded = (i + 1) * (i + 2) / 2;
+        index - exceeded
     }
 }
 
@@ -279,7 +322,19 @@ mod test {
         let mut state = State::new(&graph, groups);
 
         // 頂点0と3をswap
-        state.swap_nodes(&graph, 0, 1, 0, 0);
+        let mut prev_score = 0;
+        let mut buffer1 = [0; 6];
+        let mut buffer2 = [0; 15];
+        state.swap_nodes(
+            &graph,
+            0,
+            1,
+            0,
+            0,
+            &mut prev_score,
+            &mut buffer1,
+            &mut buffer2,
+        );
         let actual = state.score;
 
         state.update_score_all(&graph);
@@ -315,7 +370,19 @@ mod test {
             let i0 = rng.gen_range(0, N / GROUP_COUNT);
             let i1 = rng.gen_range(0, N / GROUP_COUNT);
 
-            state.swap_nodes(&graph, g0, g1, i0, i1);
+            let mut prev_score = 0;
+            let mut buffer1 = [0; 6];
+            let mut buffer2 = [0; 15];
+            state.swap_nodes(
+                &graph,
+                g0,
+                g1,
+                i0,
+                i1,
+                &mut prev_score,
+                &mut buffer1,
+                &mut buffer2,
+            );
             let actual = state.score;
 
             state.update_score_all(&graph);

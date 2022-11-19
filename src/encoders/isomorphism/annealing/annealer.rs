@@ -46,7 +46,7 @@ impl Annealer {
             }
 
             // 変形
-            let neighbor = generator.gen(&graph, &solution, &mut rng);
+            let mut neighbor = generator.gen(&graph, &solution, &mut rng);
             neighbor.apply(graph, &mut solution);
 
             // スコア計算
