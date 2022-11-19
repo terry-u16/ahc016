@@ -80,7 +80,8 @@ var contractResolver = new DefaultContractResolver
     NamingStrategy = new SnakeCaseNamingStrategy()
 };
 
-var json = JsonConvert.SerializeObject(bag.OrderBy(s => s.Bits).ThenBy(s => s.M).ThenBy(s => s.ErrorRatio).ToArray(), new JsonSerializerSettings
+var statistics = bag.OrderBy(s => s.Bits).ThenBy(s => s.M).ThenBy(s => s.ErrorRatio).ThenBy(s => s.Redundancy).ToArray();
+var json = JsonConvert.SerializeObject(statistics, new JsonSerializerSettings
 {
     ContractResolver = contractResolver,
 });

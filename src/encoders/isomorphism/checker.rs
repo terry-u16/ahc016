@@ -340,6 +340,7 @@ impl From<&Graph> for AdjacencyListGraph {
 }
 
 /// 互いに同型でないグラフをn個生成する
+#[allow(dead_code)]
 pub fn generate_isompic_graphs(n: usize, error_ratio: f64) -> (Vec<Graph>, usize) {
     for bits in 4..=6 {
         let graphs = try_generate_isompic_graphs(n, error_ratio, bits);
@@ -354,7 +355,9 @@ pub fn generate_isompic_graphs(n: usize, error_ratio: f64) -> (Vec<Graph>, usize
 
 /// 互いに同型でないグラフをn個生成する
 pub fn try_generate_isompic_graphs(n: usize, error_ratio: f64, bits: usize) -> Option<Vec<Graph>> {
-    let error_ratio = (error_ratio * 100.0).round() as usize;
+    // 0.29あたりが正確に変換できない説がある
+    // roundすればおそらく大丈夫なのだが念のため
+    let error_ratio = (error_ratio * 100.0 + 0.1) as usize;
     let accuracy_matrix = get_accuracy_matrix();
     let graphs = if bits == 4 {
         gen_graphs(&GRAPHS_4, 4)
