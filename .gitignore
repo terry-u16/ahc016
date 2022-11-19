@@ -4,6 +4,7 @@ in.txt
 out.txt
 err.txt
 data/
+__pycache__
 .vs
 /AtCoderHeuristicContest016.Sampler/bin
 /AtCoderHeuristicContest016.Sampler/obj

@@ -1,15 +1,12 @@
-import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 
 TIMESTAMP = "20221119_023835"
 M_LIST = [0, 0, 0, 0, 11, 34, 156]
 
-print("vec![")
+values = []
 
 for bits in range(4, 7):
     m = M_LIST[bits]
-    print("vec![")
 
     for eps in range(0, 41):
         csv_path = f"./data/sampled/{TIMESTAMP}/{bits}_{eps:02}.csv"
@@ -23,13 +20,8 @@ for bits in range(4, 7):
         matrix /= matrix[0, :].sum()
         diag = np.diag(matrix)
 
-        print("vec![")
-
         for d in diag:
-            print(d)
-            print(",")
-        print("],")
+            # 1.0 -> 1000のように4桁の数字としてエンコードする
+            values.append(f"{int(round(d * 1000)):04}")
 
-    print("],")
-
-print("]")
+print("".join(values))
