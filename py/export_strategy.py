@@ -19,6 +19,8 @@ for stat in data:
     bits = stat["bits"]
     redundancy = stat["redundancy"]
     score_coef = stat["score_coef"]
+    if score_coef >= 2.6:
+        continue
 
     if max_scores[m][eps] < score:
         max_scores[m][eps] = score
@@ -32,5 +34,5 @@ for m in reversed(range(MIN_M, MAX_M)):
 for m in range(MIN_M, MAX_M + 1):
     for eps in range(MAX_EPS + 1):
         bits, redundancy, score_coef = storategies[m - MIN_M][eps]
-        score_coef = int(score_coef * 10 + 0.1)
-        print(f"{bits:01}{redundancy:02}{score_coef:02}", end="")
+        score_coef = int((score_coef - 1) * 10 + 0.1)
+        print(f"{bits:01x}{redundancy:02x}{score_coef:01x}", end="")

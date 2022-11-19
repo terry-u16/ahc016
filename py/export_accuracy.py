@@ -10,18 +10,16 @@ for bits in range(4, 7):
 
     for eps in range(0, 41):
         csv_path = f"./data/sampled/{TIMESTAMP}/{bits}_{eps:02}.csv"
-        matrix = np.zeros((m, m))
+        matrix = np.zeros((m, m), dtype=np.int32)
 
         with open(csv_path, "r") as f:
             for line in f:
                 truth, answered = map(int, line.split(","))
                 matrix[truth, answered] += 1
 
-        matrix /= matrix[0, :].sum()
         diag = np.diag(matrix)
 
         for d in diag:
-            # 1.0 -> 1000のように4桁の数字としてエンコードする
-            values.append(f"{int(round(d * 1000)):04}")
+            values.append(f"{d:03x}")
 
 print("".join(values))

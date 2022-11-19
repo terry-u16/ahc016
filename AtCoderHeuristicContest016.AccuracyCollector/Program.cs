@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 
 var maxSizes = new int[] { -1, -1, -1, -1, 11, 34, 100 };
 var mList = new int[] { 10, 11, 20, 25, 28, 30, 31, 32, 33, 34, 40, 50, 60, 70, 80, 90, 100 };
-var scoreCoeffs = new double[] { 1.0, 1.5, 2.0, 2.5, 3.0 };
+var scoreCoeffs = new double[] { 1.25, 1.5, 1.75, 2.0 };
 
 var parameters = Enumerable.Range(4, 3).SelectMany(i => mList.Select(j => (i, j))).SelectMany(p => scoreCoeffs.Select(c => (p.i, p.j, c)));
 await Task.WhenAll(BuildAsync("ahc016"), BuildAsync("accuracy_collector"));

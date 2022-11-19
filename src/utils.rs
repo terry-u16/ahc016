@@ -19,12 +19,17 @@ impl<T: PartialOrd> ChangeMinMax for T {
     }
 }
 
-pub fn decode_num_to_u64(data: &[u8]) -> u64 {
+pub fn decode_hex_to_u64(data: &[u8]) -> u64 {
     let mut value = 0;
 
     for &d in data {
-        value *= 10;
-        value += d as u64 - 48;
+        value *= 16;
+        let v = if d <= b'9' {
+            d as u64 - 48
+        } else {
+            d as u64 - 97 + 10
+        };
+        value += v;
     }
 
     value
