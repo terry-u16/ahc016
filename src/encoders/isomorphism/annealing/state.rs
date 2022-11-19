@@ -85,7 +85,7 @@ impl State {
 
     pub fn swap_nodes(
         &mut self,
-        graph: &BinaryGraph,
+        _graph: &BinaryGraph,
         mut g0: usize,
         mut g1: usize,
         mut i0: usize,
@@ -98,9 +98,9 @@ impl State {
         }
 
         unsafe {
-            self.sub_relative_counts(graph, g0, g1, i0, i1);
+            self.sub_relative_counts(g0, g1, i0, i1);
             self.swap_inner(g0, i0, g1, i1);
-            self.add_relative_counts(graph, g0, g1, i0, i1);
+            self.add_relative_counts(g0, g1, i0, i1);
         }
 
         self.update_score_from_counts();
@@ -111,25 +111,19 @@ impl State {
         self.groups[g0][i0] = self.groups[g1][i1];
         self.groups[g1][i1] = temp;
 
-        let u = 1 << self.groups[g0][i0];
-        let v = 1 << self.groups[g1][i1];
-        self.groups_u128[g0] ^= u;
-        self.groups_u128[g0] ^= v;
-        self.groups_u128[g1] ^= u;
-        self.groups_u128[g1] ^= v;
+        let xor = (1 << self.groups[g0][i0]) | (1 << self.groups[g1][i1]);
+
+        self.groups_u128[g0] ^= xor;
+        self.groups_u128[g1] ^= xor;
     }
 
+    // popcnt命令の使用可否で1.5倍くらい速度差が出る
     #[target_feature(enable = "popcnt")]
-    unsafe fn sub_relative_counts(
-        &mut self,
-        graph: &BinaryGraph,
-        g0: usize,
-        g1: usize,
-        i0: usize,
-        i1: usize,
-    ) {
+    unsafe fn sub_relative_counts(&mut self, g0: usize, g1: usize, i0: usize, i1: usize) {
         assert!(g0 < g1);
 
+        // グループ内・グループ間について、辺のある・なしを数えていく
+        // 途中足しすぎたり引きすぎたりするが、add_relative_counts()で打ち消されるため問題ない
         for &(g0, i0) in [(g0, i0), (g1, i1)].iter() {
             let u = self.groups[g0][i0];
             let edges = self.graph_u128[u];
@@ -153,24 +147,10 @@ impl State {
                 }
             }
         }
-
-        // 引きすぎた分を足す
-        let u = self.groups[g0][i0];
-        let v = self.groups[g1][i1];
-        self.self_counts[g0] += graph[u][u];
-        self.self_counts[g1] += graph[v][v];
-        self.cross_counts[g0][g1] += graph[u][v];
     }
 
     #[target_feature(enable = "popcnt")]
-    unsafe fn add_relative_counts(
-        &mut self,
-        graph: &BinaryGraph,
-        g0: usize,
-        g1: usize,
-        i0: usize,
-        i1: usize,
-    ) {
+    unsafe fn add_relative_counts(&mut self, g0: usize, g1: usize, i0: usize, i1: usize) {
         assert!(g0 < g1);
 
         for &(g0, i0) in [(g0, i0), (g1, i1)].iter() {
@@ -194,13 +174,6 @@ impl State {
                 }
             }
         }
-
-        // 足しすぎた分を引く
-        let u = self.groups[g0][i0];
-        let v = self.groups[g1][i1];
-        self.self_counts[g0] -= graph[u][u];
-        self.self_counts[g1] -= graph[v][v];
-        self.cross_counts[g0][g1] -= graph[u][v];
     }
 
     pub fn update_score_all(&mut self, graph: &BinaryGraph) {
