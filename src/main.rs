@@ -105,7 +105,7 @@ fn main() {
     }
 
     let elapsed = Instant::now() - input.since;
-    let each_duration = (5.0 - (elapsed.as_secs_f64() + 0.5)) / DEFAULT_QUERY_COUNT as f64;
+    let each_duration = (5.0 - (elapsed.as_secs_f64() + 0.2)) / DEFAULT_QUERY_COUNT as f64;
     stdout.flush().unwrap();
 
     // クエリ回答
