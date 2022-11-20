@@ -4,7 +4,7 @@ MIN_M = 10
 MAX_M = 100
 MAX_EPS = 40
 
-TIMESTAMP = "20221120_003638"
+TIMESTAMP = "20221120_024611"
 
 with open(f"./data/accuracy/{TIMESTAMP}/statistics.json", "r") as f:
     data = json.load(f)
@@ -34,5 +34,5 @@ for m in reversed(range(MIN_M, MAX_M)):
 for m in range(MIN_M, MAX_M + 1):
     for eps in range(MAX_EPS + 1):
         bits, redundancy, score_coef = storategies[m - MIN_M][eps]
-        score_coef = int((score_coef - 1) * 10 + 0.1)
+        score_coef = int((score_coef - 1) * 4 + 0.1)
         print(f"{bits:01x}{redundancy:02x}{score_coef:01x}", end="")

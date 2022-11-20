@@ -35,7 +35,7 @@ impl Annealer {
 
         loop {
             all_iter += 1;
-            if (all_iter & ((1 << 10) - 1)) == 0 {
+            if (all_iter & ((1 << 7) - 1)) == 0 {
                 let time = (std::time::Instant::now() - since).as_secs_f64() * duration_inv;
                 if time >= 1.0 {
                     break;
