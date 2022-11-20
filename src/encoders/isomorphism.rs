@@ -27,7 +27,7 @@ pub struct IsomorphismEncoder {
     /// 焼きなましスコアのグループ内:グループ外の重みの比
     score_coef: f64,
     /// 混同行列（使いやすいよう転置されている）
-    confusing: Vec<Vec<i32>>,
+    confusing: Vec<Vec<u32>>,
 }
 
 impl IsomorphismEncoder {
