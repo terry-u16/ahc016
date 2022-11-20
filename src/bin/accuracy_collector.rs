@@ -4,7 +4,7 @@ use rand::prelude::*;
 use std::io::{prelude::*, BufReader};
 use std::process::{ChildStdout, Stdio};
 
-const TRIAL_COUNT: usize = 2000;
+const TRIAL_COUNT: usize = 1500;
 
 #[derive(Parser, Debug)]
 struct AppArg {

@@ -4,7 +4,7 @@ MIN_M = 10
 MAX_M = 100
 MAX_EPS = 40
 
-TIMESTAMP = "20221120_024611"
+TIMESTAMP = "20221120_124623"
 
 with open(f"./data/accuracy/{TIMESTAMP}/statistics.json", "r") as f:
     data = json.load(f)

@@ -29,8 +29,8 @@ def load(time_stamp: str) -> np.ndarray:
 
     return max_scores
 
-TIMESTAMP1 = "20221119_192902"
-TIMESTAMP2 = "20221120_024611"
+TIMESTAMP1 = "20221120_024611"
+TIMESTAMP2 = "20221120_124623"
 
 scores1 = load(TIMESTAMP1)
 scores2 = load(TIMESTAMP2)

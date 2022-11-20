@@ -377,7 +377,7 @@ fn take_n_graphs(
         .enumerate()
         .zip(accuracy_matrix[bits - 4][error_ratio].iter())
         .collect_vec();
-    graphs.sort_unstable_by_key(|(_, acc)| Reverse(**acc));
+    graphs.sort_by_key(|(_, acc)| Reverse(**acc));
     graphs.into_iter().map(|(g, _)| g).take(n).collect_vec()
 }
 
